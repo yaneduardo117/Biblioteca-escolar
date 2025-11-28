@@ -1,0 +1,41 @@
+# Ambiente virtual
+venv/
+env/
+ENV/
+.venv/
+
+# Arquivos Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos temporários e logs
+*.log
+*.tmp
+*.swp
+*.bak
+
+# Django
+staticfiles/
+static/
+media/
+
+# Configurações e credenciais
+.env
+*.env
+credentials.json
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Distribuição e pacotes
+dist/
+build/
+*.egg-info/
