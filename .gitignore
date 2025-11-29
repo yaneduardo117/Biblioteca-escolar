@@ -16,6 +16,7 @@ __pycache__/
 *.bak
 
 # Django
+db.sqlite3 /
 staticfiles/
 static/
 media/
