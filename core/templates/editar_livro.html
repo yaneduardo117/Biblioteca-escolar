@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Livro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --cor-roxo-principal: #6200EA; --cor-fundo: #F3F4F9; --cor-texto: #333333; --cor-borda: #E0E0E0; }
+        body { background-color: var(--cor-fundo); font-family: 'Inter', sans-serif; color: var(--cor-texto); }
+        .card-custom { background: white; border: none; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .card-header-custom { background: white; border-bottom: 1px solid #f0f0f0; padding: 25px 30px; border-radius: 16px 16px 0 0; }
+        .card-body-custom { padding: 30px; }
+        .form-control, .form-select { border-radius: 10px; padding: 12px 15px; font-size: 14px; }
+        .form-control:focus, .form-select:focus { border-color: var(--cor-roxo-principal); box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.1); }
+        .btn-roxo { background-color: var(--cor-roxo-principal); color: white; border-radius: 10px; padding: 12px 24px; font-weight: 600; border: none; width: 100%; transition: 0.3s; }
+        .btn-roxo:hover { background-color: #4a00b0; color: white; }
+        .btn-cancelar { background-color: #f0f0f0; color: #666; border-radius: 10px; padding: 12px 24px; font-weight: 600; border: none; width: 100%; text-align: center; display: block; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-7">
+                <div class="card-custom">
+                    <div class="card-header-custom d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-1" style="color: var(--cor-roxo-principal);">Editar Livro</h5>
+                            <small class="text-muted">Altere os dados do exemplar</small>
+                        </div>
+                        <a href="{% url 'listagem_livros' %}" class="text-muted"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                    <div class="card-body-custom">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row mb-3"><div class="col-12"><label class="form-label">Título *</label>{{ form.titulo }}</div></div>
+                            <div class="row mb-3"><div class="col-12"><label class="form-label">Autor *</label>{{ form.nome_autor }}</div></div>
+                            <div class="row mb-3"><div class="col-12"><label class="form-label">ISBN *</label>{{ form.isbn }}</div></div>
+                            <div class="row mb-3"><div class="col-12"><label class="form-label">Categoria *</label>{{ form.categoria }}</div></div>
+                            <div class="row mb-4">
+                                <div class="col-6"><label class="form-label">Ano *</label>{{ form.ano_publicacao }}</div>
+                                <div class="col-6"><label class="form-label">Quantidade *</label>{{ form.quantidade }}</div>
+                            </div>
+                            <div class="row g-2 mt-4">
+                                <div class="col-md-8 order-md-2"><button type="submit" class="btn-roxo">Salvar Alterações</button></div>
+                                <div class="col-md-4 order-md-1"><a href="{% url 'listagem_livros' %}" class="btn-cancelar">Cancelar</a></div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
