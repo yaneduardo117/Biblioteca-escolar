@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum, Q
 from .models import Livro, Autor
 from .forms import LivroForm
@@ -22,10 +22,7 @@ def listagem_livros(request):
             Q(isbn__icontains=query)
         )
 
-
-    # --- ESTATÍSTICAS (Cards do Topo) ---
-    # Criamos uma variável separada 'todos_livros' para calcular os totais.
-    # Assim, os cards mostram o total da BIBLIOTECA INTEIRA, e não só da busca.
+    # variável separada 'todos_livros' para calcular os totais.
     todos_livros = Livro.objects.all()
 
     # Total de Livros (Títulos cadastrados)
@@ -72,6 +69,43 @@ def cadastro_livro(request):
         form = LivroForm()
 
     return render(request, 'cadastro_livro.html', {'form': form})
+
+
+@login_required
+def editar_livro(request, id):
+    # Busca o livro pelo ID ou dá erro 404 se não existir
+    livro = get_object_or_404(Livro, id=id)
+
+    if request.method == 'POST':
+        # Carrega o formulário com os dados novos (POST) E diz quem estamos editando (instance)
+        form = LivroForm(request.POST, instance=livro)
+
+        if form.is_valid():
+            livro_editado = form.save(commit=False)
+
+            # --- Lógica do Autor (Mesma do cadastro) ---
+            # verificar se o usuário mudou o nome do autor
+            nome_digitado = form.cleaned_data['nome_autor']
+            autor_obj, created = Autor.objects.get_or_create(nome=nome_digitado)
+
+            livro_editado.autor = autor_obj
+            livro_editado.save()
+
+            return redirect('listagem_livros')
+    else:
+        # Quando abre a tela (GET):
+        # Preenchemos o form com os dados do livro (instance=livro)
+        # E preenchemos manualmente nosso campo extra 'nome_autor' (initial)
+        form = LivroForm(instance=livro, initial={'nome_autor': livro.autor.nome})
+
+    return render(request, 'editar_livro.html', {'form': form})
+
+
+@login_required
+def remover_livro(request, id):
+    livro = get_object_or_404(Livro, id=id)
+    livro.delete()
+    return redirect('listagem_livros')
 
 
 def fazer_logout(request):
