@@ -29,4 +29,6 @@ urlpatterns = [
     # ---  ROTAS DO SISTEMA ---
     path('', views.listagem_livros, name='listagem_livros'),
     path('cadastrar/', views.cadastro_livro, name='cadastro_livro'),
+    path('editar/<int:id>/', views.editar_livro, name='editar_livro'),
+    path('remover/<int:id>/', views.remover_livro, name='remover_livro'),
 ]
