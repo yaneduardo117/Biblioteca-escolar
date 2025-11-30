@@ -145,7 +145,7 @@
                 <div style="font-weight: 600; font-size: 14px;">Administrador</div>
                 <div style="font-size: 11px; color: #888;">Admin</div>
             </div>
-            <a href="#" class="btn btn-outline-custom d-flex align-items-center gap-2" style="text-decoration: none;">
+            <a href="{% url 'logout' %}" class="btn btn-outline-custom d-flex align-items-center gap-2" style="text-decoration: none;">
                 <i class="bi bi-box-arrow-right"></i> Sair
             </a>
         </div>
@@ -187,14 +187,21 @@
             </div>
 
             <div class="mb-4">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px; border-color: #E0E0E0;">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
-                    <input type="text" class="form-control form-control-custom border-start-0"
-                           placeholder="Buscar por título, autor ou ISBN..."
-                           style="border-radius: 0 10px 10px 0;">
-                </div>
+                <form method="get"> <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px; border-color: #E0E0E0;">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+
+                        <input type="text"
+                               name="q"
+                               class="form-control form-control-custom border-start-0"
+                               placeholder="Buscar por título, autor ou ISBN..."
+                               value="{{ request.GET.q|default:'' }}"
+                               style="border-radius: 0 10px 10px 0;">
+
+                        <button type="submit" class="btn btn-roxo ms-2" style="border-radius: 10px;">Buscar</button>
+                    </div>
+                </form>
             </div>
 
             <div class="table-responsive">
@@ -227,16 +234,32 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center py-5">
-                                <div style="color: #ccc;">
-                                    <i class="bi bi-book" style="font-size: 3rem;"></i>
-                                    <p class="mt-3 mb-0 fw-medium">Nenhum livro cadastrado.</p>
-                                    <small>Adicione o primeiro livro ao acervo!</small>
-                                </div>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+
+                                    {% if request.GET.q %}
+                                        <div class="text-muted">
+                                            <i class="bi bi-search" style="font-size: 2.5rem; color: #ccc;"></i>
+                                            <h6 class="mt-3 fw-bold">Nenhum resultado encontrado</h6>
+                                            <p class="mb-3">Não encontramos livros, autores ou ISBN contendo "<strong>{{ request.GET.q }}</strong>".</p>
+
+                                            <a href="{% url 'listagem_livros' %}" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;">
+                                                <i class="bi bi-x-circle"></i> Limpar Pesquisa
+                                            </a>
+                                        </div>
+
+                                    {% else %}
+                                        <div style="color: #ccc;">
+                                            <i class="bi bi-book" style="font-size: 3rem;"></i>
+                                            <p class="mt-3 mb-0 fw-medium">Nenhum livro cadastrado.</p>
+                                            <small>Adicione o primeiro livro ao acervo!</small>
+                                        </div>
+                                    {% endif %}
+
+                                </td>
+                            </tr>
                         {% endfor %}
+
                     </tbody>
                 </table>
             </div>
