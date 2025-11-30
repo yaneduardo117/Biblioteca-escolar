@@ -121,3 +121,17 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --- CONFIGURAÇÃO DE LOGIN ---
+
+# Se o login der certo, vai para a listagem de livros
+LOGIN_REDIRECT_URL = 'listagem_livros'
+
+# Se o usuário clicar em "Sair", volta para o login
+LOGOUT_REDIRECT_URL = 'login'
+
+# Se alguém tentar entrar numa página restrita sem logar, é chutado para cá
+LOGIN_URL = 'login'
+
+# Diz ao Django para usar a classe de login por email
+AUTHENTICATION_BACKENDS = ['core.backends.EmailBackend']
