@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Biblioteca</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --cor-roxo-principal: #6200EA;
+            --cor-fundo: #F3F4F9;
+        }
+        body {
+            background-color: var(--cor-fundo);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-login {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(98, 0, 234, 0.05);
+            text-align: center;
+        }
+        .logo-area {
+            background: var(--cor-roxo-principal);
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            color: white;
+            font-size: 28px;
+        }
+        .form-control {
+            background-color: white;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 12px 15px;
+            font-size: 15px;
+        }
+        .form-control:focus {
+            border-color: var(--cor-roxo-principal);
+            box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.1);
+        }
+        .btn-roxo {
+            background-color: var(--cor-roxo-principal);
+            color: white;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 600;
+            width: 100%;
+            border: none;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        .btn-roxo:hover {
+            background-color: #4a00b0;
+            color: white;
+        }
+        .label-custom {
+            text-align: left;
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card-login">
+        <div class="logo-area">
+            <i class="bi bi-book"></i>
+        </div>
+
+        <h4 style="font-weight: 700; color: #333; margin-bottom: 5px;">Bem-vindo(a)!</h4>
+        <p class="text-muted small mb-4">Faça login para gerenciar o acervo.</p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="alert alert-danger py-2 small rounded-3 border-0 bg-danger bg-opacity-10 text-danger mb-3">
+                    <i class="bi bi-exclamation-circle me-1"></i> Usuário ou senha incorretos.
+                </div>
+            {% endif %}
+
+            <div class="mb-3">
+                <label class="label-custom">E-mail</label>
+                <input type="text" name="username" class="form-control" placeholder="seu@email.c" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="label-custom">Senha</label>
+                <input type="password" name="password" class="form-control" placeholder="Digite sua senha" required>
+            </div>
+
+            <button type="submit" class="btn-roxo">Entrar no Sistema</button>
+        </form>
+
+        <div class="mt-4">
+            <small class="text-muted" style="font-size: 12px;">Sistema de Biblioteca Escolar v1.0</small>
+        </div>
+    </div>
+
+</body>
+</html>
