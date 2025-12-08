@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Biblioteca Escolar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --cor-roxo-principal: #6200EA;
+            --cor-fundo: #F3F4F9;
+        }
+        body {
+            background-color: var(--cor-fundo);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 0;
+        }
+
+        .card-cadastro {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 700px;
+            overflow: hidden;
+        }
+
+        .header-roxo {
+            background-color: var(--cor-roxo-principal);
+            padding: 40px;
+            color: white;
+        }
+
+        .form-body {
+            padding: 40px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .form-label span { color: #dc3545; }
+
+        .form-control, .form-select {
+            background-color: #F8F9FA;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+        }
+        .form-control:focus {
+            background-color: white;
+            border-color: var(--cor-roxo-principal);
+            box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.1);
+        }
+
+        .form-control.is-invalid, .form-select.is-invalid {
+            border-color: #dc3545;
+            background-image: none;
+        }
+        .invalid-feedback {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .btn-roxo {
+            background-color: var(--cor-roxo-principal);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .btn-roxo:hover { background-color: #4a00b0; }
+
+        /* Barra de força simplificada */
+        .progress-bar-custom {
+            height: 4px;
+            background: #eee;
+            margin-top: 8px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #dc3545;
+            transition: 0.3s;
+        }
+
+        /* Estilo da lista de dicas simples */
+        .dicas-senha {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+            padding-left: 20px; /* Espaço para os bullets */
+        }
+        .dicas-senha li {
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card-cadastro">
+        <div class="header-roxo">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-book-half fs-4"></i>
+                <span class="fw-bold">Biblioteca Escolar</span>
+            </div>
+            <h4 class="fw-bold mb-0">Cadastro de Novo Usuário</h4>
+        </div>
+
+        <div class="form-body">
+            <form method="post" id="formCadastro">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger mb-4 small rounded-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label">Nome Completo <span>*</span></label>
+                    <input type="text" name="first_name"
+                           class="form-control {% if form.first_name.errors %}is-invalid{% endif %}"
+                           value="{{ form.first_name.value|default:'' }}"
+                           placeholder="Digite seu nome completo">
+                    <div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Data de Nascimento <span>*</span></label>
+                        <input type="date" name="data_nascimento"
+                               class="form-control {% if form.data_nascimento.errors %}is-invalid{% endif %}"
+                               value="{{ form.data_nascimento.value|default:'' }}">
+                        <div class="invalid-feedback d-block">{{ form.data_nascimento.errors.0 }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Matrícula Escolar <span>*</span></label>
+                        <input type="text" name="matricula"
+                               class="form-control {% if form.matricula.errors %}is-invalid{% endif %}"
+                               value="{{ form.matricula.value|default:'' }}"
+                               placeholder="ID do aluno">
+                        <div class="invalid-feedback d-block">{{ form.matricula.errors.0 }}</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Telefone / WhatsApp</label>
+                        <input type="text" name="telefone"
+                               class="form-control {% if form.telefone.errors %}is-invalid{% endif %}"
+                               value="{{ form.telefone.value|default:'' }}"
+                               placeholder="(00) 00000-0000">
+                        <div class="invalid-feedback d-block">{{ form.telefone.errors.0 }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Turno <span>*</span></label>
+                        <select name="turno" class="form-select {% if form.turno.errors %}is-invalid{% endif %}">
+                            <option value="">Selecione...</option>
+                            {% for value, text in form.fields.turno.choices %}
+                                <option value="{{ value }}" {% if form.turno.value == value %}selected{% endif %}>{{ text }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback d-block">{{ form.turno.errors.0 }}</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Curso / Modalidade <span>*</span></label>
+                    <input type="text" name="curso"
+                           class="form-control {% if form.curso.errors %}is-invalid{% endif %}"
+                           value="{{ form.curso.value|default:'' }}"
+                           placeholder="Ex: Ensino Médio">
+                    <div class="invalid-feedback d-block">{{ form.curso.errors.0 }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">E-mail <span>*</span></label>
+                    <input type="email" name="email"
+                           class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                           value="{{ form.email.value|default:'' }}"
+                           placeholder="seu.email@exemplo.com">
+                    <div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Senha <span>*</span></label>
+                    <div class="position-relative">
+                        <input type="password" name="senha1" id="senhaInput"
+                               class="form-control {% if form.senha1.errors %}is-invalid{% endif %}"
+                               placeholder="Crie sua senha">
+                        <i class="bi bi-eye-slash position-absolute end-0 top-50 translate-middle-y me-3 text-muted cursor-pointer" id="toggleSenha"></i>
+                    </div>
+                    <div class="invalid-feedback d-block">{{ form.senha1.errors.0 }}</div>
+
+                    <div class="progress-bar-custom">
+                        <div class="progress-fill" id="forcaBarra"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                         <ul class="dicas-senha mb-0">
+                            <li>8+ caracteres</li>
+                            <li>Uma letra maiúscula e uma minúscula</li>
+                            <li>Um número e um caractere especial</li>
+                        </ul>
+                        <div class="small fw-bold mt-1" id="msgForca" style="color: #dc3545; font-size: 12px;"></div>
+                    </div>
+                </div>
+
+                <div class="mb-4 mt-4">
+                    <label class="form-label">Confirmar Senha <span>*</span></label>
+                    <input type="password" name="senha2" id="confirmaSenha"
+                           class="form-control {% if form.senha2.errors %}is-invalid{% endif %}"
+                           placeholder="Confirme sua senha">
+                    <div class="invalid-feedback d-block">{{ form.senha2.errors.0 }}</div>
+                </div>
+
+                <button type="submit" class="btn-roxo">Cadastrar Usuário</button>
+
+                <div class="text-center mt-3">
+                    <small class="text-muted">Já possui cadastro? <a href="{% url 'login' %}" style="color: var(--cor-roxo-principal); text-decoration: none;">Fazer login</a></small>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const senhaInput = document.getElementById('senhaInput');
+        const barra = document.getElementById('forcaBarra');
+        const msgForca = document.getElementById('msgForca');
+
+        // Removemos toda a lógica de checkboxes (updateReq)
+
+        senhaInput.addEventListener('keyup', function() {
+            const val = senhaInput.value;
+            let score = 0;
+
+            // Mantemos a lógica apenas para a barra colorida
+            const hasMin = val.length >= 8;
+            const hasUpper = /[A-Z]/.test(val);
+            const hasLower = /[a-z]/.test(val);
+            const hasNum = /[0-9]/.test(val);
+            const hasSpec = /[!@#$%^&*(),.?":{}|<>]/.test(val);
+
+            if(hasMin) score++;
+            if(hasUpper) score++;
+            if(hasLower) score++;
+            if(hasNum) score++;
+            if(hasSpec) score++;
+
+            // Atualiza Barra
+            let width = (score / 5) * 100;
+            let color = '#dc3545'; // Vermelho
+            let text = 'Fraca';
+
+            if(val.length === 0) {
+                width = 0; text = '';
+            } else if(score >= 3 && score < 5) {
+                color = '#ffc107'; text = 'Média';
+            } else if(score == 5) {
+                color = '#198754'; text = 'Forte';
+            }
+
+            barra.style.width = width + '%';
+            barra.style.backgroundColor = color;
+            msgForca.innerText = text;
+            msgForca.style.color = color;
+        });
+
+        // Toggle Visibilidade da Senha
+        document.getElementById('toggleSenha').addEventListener('click', function() {
+            const type = senhaInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            senhaInput.setAttribute('type', type);
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+    </script>
+
+</body>
+</html>
