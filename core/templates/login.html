@@ -76,6 +76,17 @@
             color: #666;
             margin-bottom: 6px;
         }
+        /* Link de Cadastro estilo Hover */
+        .link-cadastro {
+            color: var(--cor-roxo-principal);
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .link-cadastro:hover {
+            color: #4a00b0;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -99,7 +110,7 @@
 
             <div class="mb-3">
                 <label class="label-custom">E-mail</label>
-                <input type="text" name="username" class="form-control" placeholder="seu@email.c" required>
+                <input type="text" name="username" class="form-control" placeholder="seu@email.com" required>
             </div>
 
             <div class="mb-4">
@@ -110,8 +121,15 @@
             <button type="submit" class="btn-roxo">Entrar no Sistema</button>
         </form>
 
+        <div class="text-center mt-3">
+            <small class="text-muted">
+                Ainda não tem conta?
+                <a href="{% url 'cadastrar_usuario' %}" class="link-cadastro">Cadastre-se</a>
+            </small>
+        </div>
+
         <div class="mt-4">
-            <small class="text-muted" style="font-size: 12px;">Sistema de Biblioteca Escolar v1.0</small>
+            <small class="text-muted" style="font-size: 12px;">Sistema de Biblioteca Escolar v1.6</small>
         </div>
     </div>
 
