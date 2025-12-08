@@ -1,19 +1,14 @@
 from django import forms
-from .models import Livro
+from .models import Livro, Usuario
 from datetime import date
+from django.contrib.auth.forms import UserCreationForm
 
 
 class LivroForm(forms.ModelForm):
     """
     Formulário responsável pelo cadastro e validação dos livros.
-    Herda de ModelForm para facilitar a integração com o banco de dados.
     """
 
-    # --- CAMPO PERSONALIZADO: NOME DO AUTOR ---
-    # foi criado o campo 'nome_autor' manualmente porque, no banco de dados,
-    # o Autor é uma chave estrangeira (ID). Aqui, queremos permitir que o
-    # usuário digite o nome (Texto) livremente para melhorar a usabilidade.
-    # A conversão de "Nome Texto" para "ID do Autor" será feita na View.
     nome_autor = forms.CharField(
         label='Nome do Autor',
         widget=forms.TextInput(attrs={
@@ -24,60 +19,124 @@ class LivroForm(forms.ModelForm):
     )
 
     class Meta:
-        # Define qual modelo (tabela) este formulário vai alimentar
         model = Livro
-
-        # Lista de campos que serão exibidos no HTML.
-        # Note que removemos o campo 'autor' original (dropdown) e usamos o 'nome_autor' acima.
         fields = ['titulo', 'categoria', 'isbn', 'ano_publicacao', 'quantidade']
 
-        # --- ESTILIZAÇÃO (BOOTSTRAP) ---
-        # O dicionário 'widgets' serve para injetar classes CSS nos inputs do HTML.
-        # Usamos 'form-control' e 'form-select' para aplicar o visual do Bootstrap.
+        # --- ESTILIZAÇÃO E RESTRIÇÕES VISUAIS (WIDGETS) ---
         widgets = {
             'titulo': forms.TextInput(attrs={'class': 'form-control'}),
             'isbn': forms.TextInput(attrs={'class': 'form-control'}),
-            'ano_publicacao': forms.NumberInput(attrs={'class': 'form-control'}),
-            'quantidade': forms.NumberInput(attrs={'class': 'form-control'}),
+
+            # ATUALIZAÇÃO: Adicionado min, max e placeholder para o Ano
+            'ano_publicacao': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1000',  # Bloqueia visualmente anos antigos
+                'max': str(date.today().year),  # Bloqueia visualmente anos futuros
+                'placeholder': f'Ex: {date.today().year}'
+            }),
+
+            # Adicionado min para Quantidade
+            'quantidade': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',  # Bloqueia visualmente números negativos
+                'placeholder': 'Ex: 1'
+            }),
+
             'categoria': forms.Select(attrs={'class': 'form-select'}),
         }
 
-    # --- VALIDAÇÕES DE REGRA DE NEGÓCIO ---
+    # --- VALIDAÇÕES DE REGRA DE NEGÓCIO (BACKEND) ---
 
     def clean_isbn(self):
-        """
-        Valida o campo ISBN conforme requisitos do projeto:
-        1. Remove formatação (traços e espaços).
-        2. Verifica se contém apenas números.
-        3. Verifica se tem 10 ou 13 dígitos.
-        """
         isbn = self.cleaned_data.get('isbn')
-
-        # Se o campo estiver vazio, retorna vazio (o required=True padrão já trata isso)
         if not isbn: return isbn
 
-        # Sanitização: Remove caracteres especiais que o usuário possa ter digitado
         isbn = isbn.replace('-', '').replace(' ', '')
 
-        # Regra 1: Apenas números
         if not isbn.isdigit():
             raise forms.ValidationError("ISBN deve conter apenas números.")
 
-        # Regra 2: Tamanho exato (Desafio do PDF)
         if len(isbn) not in [10, 13]:
             raise forms.ValidationError("ISBN deve ter 10 ou 13 números.")
 
-        return isbn  # Retorna o dado limpo para ser salvo
+        return isbn
 
     def clean_ano_publicacao(self):
         """
-        Valida o Ano de Publicação.
-        Impede o cadastro de livros com datas futuras (ex: ano 2050).
+        Valida se o ano é futuro ou muito antigo.
         """
         ano = self.cleaned_data.get('ano_publicacao')
 
-        # Compara o ano digitado com o ano atual do sistema
-        if ano and ano > date.today().year:
-            raise forms.ValidationError("Ano inválido (futuro).")
+        if ano is not None:
+            ano_atual = date.today().year
+
+            # Erro se for maior que o ano atual
+            if ano > ano_atual:
+                raise forms.ValidationError(f"Ano inválido (não pode ser maior que {ano_atual}).")
+
+            # Erro se for menor que 1000 (evita erros de digitação como '20')
+            if ano < 1000:
+                raise forms.ValidationError("Ano inválido (muito antigo).")
 
         return ano
+
+    def clean_quantidade(self):
+        """
+        Impede cadastro de quantidade negativa.
+        """
+        qtd = self.cleaned_data.get('quantidade')
+
+        if qtd is not None and qtd < 0:
+            raise forms.ValidationError("A quantidade não pode ser negativa.")
+
+        return qtd
+
+
+class CadastroUsuarioForm(forms.ModelForm):
+    # Defini os campos de senha explicitamente para validação
+    senha1 = forms.CharField(
+        label='Senha',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=True
+    )
+    senha2 = forms.CharField(
+        label='Confirmar Senha',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=True
+    )
+
+    class Meta:
+        model = Usuario
+        # Incluí todos os campos do formulário
+        fields = [
+            'first_name', 'last_name', 'data_nascimento',
+            'matricula', 'telefone', 'turno', 'curso', 'email'
+        ]
+
+    def clean_email(self):
+        # Validação extra para verificar se o email já existe
+        email = self.cleaned_data.get('email')
+        if Usuario.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este e-mail já está cadastrado.")
+        return email
+
+    def clean(self):
+        # Validação geral (comparar senhas)
+        cleaned_data = super().clean()
+        senha1 = cleaned_data.get("senha1")
+        senha2 = cleaned_data.get("senha2")
+
+        if senha1 and senha2 and senha1 != senha2:
+            # Adiciona o erro especificamente ao campo 'senha2'
+            self.add_error('senha2', "As senhas não conferem.")
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        # Sobrescrever o save para criptografar a senha corretamente
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["senha1"])
+        user.username = user.email  # Garante que username seja igual ao email
+        if commit:
+            user.save()
+        return user
