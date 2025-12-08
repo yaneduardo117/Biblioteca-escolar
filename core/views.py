@@ -1,10 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum, Q
 from .models import Livro, Autor
-from .forms import LivroForm
+from .forms import LivroForm, CadastroUsuarioForm
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
-
+from django.contrib.auth import logout, login
 
 @login_required
 def listagem_livros(request):
@@ -111,3 +110,25 @@ def remover_livro(request, id):
 def fazer_logout(request):
     logout(request)  # Encerra a sessão do usuário
     return redirect('login')
+
+
+def cadastrar_usuario(request):
+    if request.user.is_authenticated:
+        return redirect('listagem_livros')
+
+    if request.method == 'POST':
+        form = CadastroUsuarioForm(request.POST)
+        if form.is_valid():
+            usuario = form.save(commit=False)
+            # Define o username igual ao email para evitar erros do Django Admin padrão
+            usuario.username = usuario.email
+            usuario.save()
+
+            # Opcional: Logar automaticamente após cadastro
+            # login(request, usuario, backend='core.backends.EmailBackend')
+
+            return redirect('login')
+    else:
+        form = CadastroUsuarioForm()
+
+    return render(request, 'cadastro_usuario.html', {'form': form})
