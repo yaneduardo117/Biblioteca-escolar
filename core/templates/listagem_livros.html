@@ -1,285 +1,244 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Biblioteca</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% extends 'base.html' %}
 
-    <style>
-        :root {
-            --cor-roxo-principal: #6200EA;
-            --cor-fundo: #F3F4F9;
-            --cor-texto: #333333;
-            --cor-borda: #E0E0E0;
-        }
+{% block page_title %}Sistema de Biblioteca Escolar{% endblock %}
 
-        body {
-            background-color: var(--cor-fundo);
-            font-family: 'Inter', sans-serif;
-            color: var(--cor-texto);
-        }
+{% block content %}
 
-        /* Navbar */
-        .top-navbar {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-            padding: 15px 30px;
-        }
+<style>
+    /* Cards do Topo */
+    .card-stat {
+        background: white;
+        border: none;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .stat-label {
+        color: #888;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 5px;
+        text-transform: none;
+    }
+    .stat-value {
+        color: #333;
+        font-size: 32px;
+        font-weight: 500;
+        line-height: 1.2;
+    }
 
-        /* Logo */
-        .logo-box {
-            background-color: var(--cor-roxo-principal);
-            color: white;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            font-size: 20px;
-        }
+    /* Card Principal (Tabela) */
+    .main-card {
+        background: white;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        margin-top: 20px;
+        overflow: hidden;
+    }
 
-        /* Cards */
-        .card-custom {
-            background: white;
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            padding: 20px;
-            height: 100%;
-        }
+    /* Barra de Busca */
+    .search-input-group .input-group-text {
+        background-color: #F8F9FA;
+        border: 1px solid #eee;
+        border-right: none;
+        color: #999;
+    }
+    .search-input-group input {
+        background-color: #F8F9FA;
+        border: 1px solid #eee;
+        border-left: none;
+        font-size: 14px;
+        padding: 10px;
+    }
+    .search-input-group input:focus {
+        background-color: #fff;
+        border-color: #6200EA;
+        box-shadow: none;
+    }
 
-        /* Inputs */
-        .form-control-custom {
-            background-color: white;
-            border: 1px solid var(--cor-borda);
-            border-radius: 10px;
-            padding: 12px 20px;
-            font-size: 14px;
-        }
-        .form-control-custom:focus {
-            border-color: var(--cor-roxo-principal);
-            box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.1);
-        }
+    /* Tabela */
+    .table-custom {
+        width: 100%;
+        margin-bottom: 0;
+    }
+    .table-custom th {
+        font-size: 11px;
+        font-weight: 700;
+        color: #9AA0AC;
+        text-transform: uppercase;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 15px 24px;
+        background-color: white;
+    }
+    .table-custom td {
+        font-size: 14px;
+        color: #444;
+        vertical-align: middle;
+        padding: 15px 24px;
+        border-bottom: 1px solid #f9f9f9;
+    }
 
-        /* Botões */
-        .btn-roxo {
-            background-color: var(--cor-roxo-principal);
-            color: white;
-            border-radius: 10px;
-            padding: 10px 24px;
-            font-weight: 500;
-            border: none;
-            transition: 0.3s;
-        }
-        .btn-roxo:hover {
-            background-color: #4a00b0;
-            color: white;
-        }
+    /* Badges e Botões */
+    .badge-categoria {
+        background-color: #F3E5F5;
+        color: #8E24AA;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+    }
 
-        .btn-outline-custom {
-            border: 1px solid #ddd;
-            color: #666;
-            border-radius: 10px;
-            padding: 8px 20px;
-        }
-        .btn-outline-custom:hover { background: #f8f8f8; }
+    .btn-purple {
+        background-color: #6200EA;
+        color: white;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-weight: 500;
+        border: none;
+        transition: 0.2s;
+    }
+    .btn-purple:hover { background-color: #5000ca; color: white; }
 
-        /* Tabela */
-        .table-custom thead th {
-            border-bottom: none;
-            color: #888;
-            font-weight: 500;
-            font-size: 13px;
-            text-transform: uppercase;
-            padding-bottom: 15px;
-        }
-        .table-custom tbody td {
-            padding: 15px 10px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f0f0f0;
-            color: #444;
-            font-weight: 500;
-        }
-        .table-custom tr:last-child td { border-bottom: none; }
+    .action-btn { padding: 5px; transition: 0.2s; border: none; background: transparent; }
+    .action-btn:hover { transform: scale(1.1); }
+    .text-edit { color: #00bfa5; }
+    .text-delete { color: #ff5252; }
+</style>
 
-        .badge-categoria {
-            background-color: #EDE7F6;
-            color: var(--cor-roxo-principal);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .stat-label { color: #888; font-size: 14px; margin-bottom: 5px; }
-        .stat-value { font-size: 24px; font-weight: 700; color: #333; }
-    </style>
-</head>
-<body>
-
-    <nav class="top-navbar d-flex justify-content-between align-items-center mb-5">
-        <div class="d-flex align-items-center gap-3">
-            <div class="logo-box">
-                <i class="bi bi-book-half"></i>
-            </div>
-            <div style="line-height: 1.2;">
-                <div style="font-weight: 700; color: var(--cor-roxo-principal);">Sistema de Biblioteca Escolar</div>
-                <div style="font-size: 12px; color: #888;">Gerenciamento de Acervo</div>
-            </div>
+<div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card-stat">
+            <div class="stat-label">Total de Livros (Títulos)</div>
+            <div class="stat-value">{{ total_livros }}</div>
         </div>
+    </div>
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card-stat">
+            <div class="stat-label">Exemplares no Acervo</div>
+            <div class="stat-value">{{ total_exemplares }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-stat">
+            <div class="stat-label">Categorias Cadastradas</div>
+            <div class="stat-value">{{ total_categorias }}</div>
+        </div>
+    </div>
+</div>
 
-        <div class="d-flex align-items-center gap-3">
-            <div class="text-end d-none d-md-block">
-                <div style="font-weight: 600; font-size: 14px;">Administrador</div>
-                <div style="font-size: 11px; color: #888;">Admin</div>
-            </div>
-            <a href="{% url 'logout' %}" class="btn btn-outline-custom d-flex align-items-center gap-2" style="text-decoration: none;">
-                <i class="bi bi-box-arrow-right"></i> Sair
+<div class="main-card">
+
+    <div class="p-4 d-flex flex-wrap align-items-center justify-content-between gap-3 border-bottom border-light">
+        <h5 class="mb-0 fw-bold text-secondary">Acervo de Livros</h5>
+
+        <div class="d-flex gap-2 flex-grow-1 justify-content-end">
+            <form method="get" class="d-flex w-100" style="max-width: 350px;">
+                <div class="input-group search-input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por título, autor..." value="{{ request.GET.q|default:'' }}" aria-label="Buscar">
+                    <button class="btn btn-outline-light text-secondary border-start-0 border-top border-bottom border-end" style="border-color: #eee;" type="submit">Ir</button>
+                </div>
+            </form>
+
+            <a href="{% url 'cadastro_livro' %}" class="btn-purple d-flex align-items-center gap-2 text-decoration-none">
+                <i class="bi bi-plus-lg"></i> <span class="d-none d-md-inline">Adicionar Livro</span>
             </a>
         </div>
-    </nav>
+    </div>
 
-    <div class="container pb-5">
-
-        <div class="row mb-4">
-            <div class="col-md-4 mb-3">
-                <div class="card-custom">
-                    <div class="stat-label">Total de Livros (Títulos)</div>
-                    <div class="stat-value">{{ total_livros }}</div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card-custom">
-                    <div class="stat-label">Exemplares no Acervo</div>
-                    <div class="stat-value">{{ total_exemplares }}</div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card-custom">
-                    <div class="stat-label">Categorias Cadastradas</div>
-                    <div class="stat-value">{{ total_categorias }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card-custom" style="padding: 30px;">
-
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                <h5 class="mb-0 fw-bold text-secondary">Acervo de Livros</h5>
-                <a href="{% url 'cadastro_livro' %}" class="btn btn-roxo">
-                    <i class="bi bi-plus-lg me-1"></i> Adicionar Livro
-                </a>
-            </div>
-
-            <div class="mb-4">
-                <form method="get">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px; border-color: #E0E0E0;">
-                            <i class="bi bi-search text-muted"></i>
-                        </span>
-                        <input type="text" name="q" class="form-control form-control-custom border-start-0"
-                               placeholder="Buscar por título, autor ou ISBN..." value="{{ request.GET.q|default:'' }}"
-                               style="border-radius: 0 10px 10px 0;">
-                        <button type="submit" class="btn btn-roxo ms-2" style="border-radius: 10px;">Buscar</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-custom table-hover">
-                    <thead>
-                        <tr>
-                            <th style="padding-left: 20px;">Título</th>
-                            <th>Autor</th>
-                            <th>Categoria</th>
-                            <th>ISBN</th>
-                            <th>Ano</th>
-                            <th class="text-center">Qtd</th> <th class="text-center">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for livro in livros %}
-                        <tr>
-                            <td style="padding-left: 20px;">
-                                <div class="fw-bold">{{ livro.titulo }}</div>
-                            </td>
-                            <td>{{ livro.autor.nome }}</td>
-                            <td>
-                                <span class="badge-categoria">{{ livro.categoria.nome }}</span>
-                            </td>
-                            <td style="color: #666; font-size: 13px;">{{ livro.isbn }}</td>
-                            <td>{{ livro.ano_publicacao }}</td>
-
-                            <td class="text-center fw-bold text-secondary">
-                                {{ livro.quantidade }}
-                            </td>
-
-                            <td class="text-center">
-                                <a href="{% url 'editar_livro' livro.id %}" class="btn btn-sm text-primary" title="Editar">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-
-                                <button type="button" class="btn btn-sm text-danger" data-bs-toggle="modal" data-bs-target="#modal{{ livro.id }}" title="Excluir">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Autor</th>
+                    <th>Categoria</th>
+                    <th>ISBN</th>
+                    <th>Ano</th>
+                    <th>Qtd</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for livro in livros %}
+                <tr>
+                    <td>
+                        <span class="fw-bold text-dark">{{ livro.titulo }}</span>
+                    </td>
+                    <td class="text-secondary">{{ livro.autor.nome }}</td>
+                    <td>
+                        <span class="badge-categoria">{{ livro.categoria.nome }}</span>
+                    </td>
+                    <td class="text-muted small">{{ livro.isbn }}</td>
+                    <td class="text-muted small">{{ livro.ano_publicacao }}</td>
+                    <td>
+                        {% if livro.quantidade > 0 %}
+                            <span class="fw-bold text-dark">{{ livro.quantidade }}</span>
+                        {% else %}
+                            <span class="badge bg-danger">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'editar_livro' livro.id %}" class="action-btn text-edit me-1" title="Editar">
+                            <i class="bi bi-pencil-square fs-5"></i>
+                        </a>
+                        <button type="button" class="action-btn text-delete" data-bs-toggle="modal" data-bs-target="#modal{{ livro.id }}" title="Excluir">
+                            <i class="bi bi-trash fs-5"></i>
+                        </button>
 
                         <div class="modal fade" id="modal{{ livro.id }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content" style="border-radius: 16px; border: none;">
-                                    <div class="modal-body text-center p-4">
-                                        <div class="mb-3" style="color: #dc3545; background: #ffe6e6; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-                                            <i class="bi bi-trash3-fill" style="font-size: 24px;"></i>
+                                <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                                    <div class="modal-body text-center p-5">
+                                        <div class="mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10" style="width: 60px; height: 60px;">
+                                            <i class="bi bi-trash3-fill text-danger fs-3"></i>
                                         </div>
-                                        <h5 class="fw-bold mb-2">Tem a certeza?</h5>
-                                        <p class="text-muted small mb-4">
-                                            Você está prestes a excluir o livro <br><strong>"{{ livro.titulo }}"</strong>.<br>
-                                            Essa ação não pode ser desfeita.
-                                        </p>
+                                        <h5 class="fw-bold mb-2">Excluir Livro?</h5>
+                                        <p class="text-muted mb-4 text-start text-center">Tem certeza que deseja remover <strong>"{{ livro.titulo }}"</strong>?</p>
                                         <div class="d-flex justify-content-center gap-2">
-                                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Cancelar</button>
-                                            <a href="{% url 'remover_livro' livro.id %}" class="btn btn-danger px-4" style="border-radius: 10px;">Sim, excluir</a>
+                                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+                                            <a href="{% url 'remover_livro' livro.id %}" class="btn btn-danger px-4">Sim, excluir</a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5">
 
-                        {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center py-5">
-                                    {% if request.GET.q %}
-                                        <div class="text-muted">
-                                            <i class="bi bi-search" style="font-size: 2.5rem; color: #ccc;"></i>
-                                            <h6 class="mt-3 fw-bold">Nenhum resultado encontrado</h6>
-                                            <p class="mb-3">Não encontramos livros, autores ou ISBN contendo "<strong>{{ request.GET.q }}</strong>".</p>
-                                            <a href="{% url 'listagem_livros' %}" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;">
-                                                <i class="bi bi-x-circle"></i> Limpar Pesquisa
-                                            </a>
-                                        </div>
-                                    {% else %}
-                                        <div style="color: #ccc;">
-                                            <i class="bi bi-book" style="font-size: 3rem;"></i>
-                                            <p class="mt-3 mb-0 fw-medium">Nenhum livro cadastrado.</p>
-                                            <small>Adicione o primeiro livro ao acervo!</small>
-                                        </div>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                        {% if request.GET.q %}
+                            <div class="text-muted">
+                                <i class="bi bi-search" style="font-size: 2rem; color: #dee2e6;"></i>
+                                <h6 class="mt-3 fw-bold text-secondary">Nenhum resultado encontrado</h6>
+                                <p class="mb-3 small">
+                                    Não encontramos livros, autores ou ISBN contendo "<strong>{{ request.GET.q }}</strong>".
+                                </p>
+                                <a href="{% url 'listagem_livros' %}" class="btn btn-sm btn-outline-secondary" style="border-radius: 6px;">
+                                    <i class="bi bi-x-lg me-1"></i> Limpar Pesquisa
+                                </a>
+                            </div>
 
-        </div>
+                        {% else %}
+                            <div class="text-muted opacity-50">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                <p class="mb-0">Nenhum livro cadastrado.</p>
+                            </div>
+                        {% endif %}
+
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html>
+{% endblock %}
