@@ -164,13 +164,15 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Telefone / WhatsApp</label>
-                        <input type="text" name="telefone"
+                        <label class="form-label">Telefone / WhatsApp (Opcional)</label>
+                        <input type="text" name="telefone" id="telefoneInput"
                                class="form-control {% if form.telefone.errors %}is-invalid{% endif %}"
                                value="{{ form.telefone.value|default:'' }}"
-                               placeholder="(00) 00000-0000">
+                               placeholder="(00) 00000-0000"
+                               maxlength="15">
                         <div class="invalid-feedback d-block">{{ form.telefone.errors.0 }}</div>
                     </div>
+
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Turno <span>*</span></label>
                         <select name="turno" class="form-select {% if form.turno.errors %}is-invalid{% endif %}">
@@ -243,17 +245,15 @@
     </div>
 
     <script>
+        // --- LÓGICA DE SENHA E BARRA DE FORÇA ---
         const senhaInput = document.getElementById('senhaInput');
         const barra = document.getElementById('forcaBarra');
         const msgForca = document.getElementById('msgForca');
-
-        // Removemos toda a lógica de checkboxes (updateReq)
 
         senhaInput.addEventListener('keyup', function() {
             const val = senhaInput.value;
             let score = 0;
 
-            // Mantemos a lógica apenas para a barra colorida
             const hasMin = val.length >= 8;
             const hasUpper = /[A-Z]/.test(val);
             const hasLower = /[a-z]/.test(val);
@@ -266,9 +266,8 @@
             if(hasNum) score++;
             if(hasSpec) score++;
 
-            // Atualiza Barra
             let width = (score / 5) * 100;
-            let color = '#dc3545'; // Vermelho
+            let color = '#dc3545';
             let text = 'Fraca';
 
             if(val.length === 0) {
@@ -291,6 +290,27 @@
             senhaInput.setAttribute('type', type);
             this.classList.toggle('bi-eye');
             this.classList.toggle('bi-eye-slash');
+        });
+
+        // mascara de telefone
+        const telefoneInput = document.getElementById('telefoneInput');
+
+        telefoneInput.addEventListener('input', function (e) {
+            let value = e.target.value;
+
+            // 1. Remove tudo o que não é número
+            value = value.replace(/\D/g, "");
+
+            // 2. Limita á 11 dígitos (DDD + 9 números)
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+
+            // 3. Aplica a formatação (00) 00000-0000
+            value = value.replace(/^(\d{2})(\d)/g, "($1) $2");
+            value = value.replace(/(\d)(\d{4})$/, "$1-$2");
+
+            e.target.value = value;
         });
     </script>
 
