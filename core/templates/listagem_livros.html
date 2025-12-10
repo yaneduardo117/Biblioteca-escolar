@@ -140,7 +140,7 @@
             <form method="get" class="d-flex w-100" style="max-width: 350px;">
                 <div class="input-group search-input-group">
                     <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" name="q" class="form-control" placeholder="Buscar por título, autor..." value="{{ request.GET.q|default:'' }}" aria-label="Buscar">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por título, autor ou ISBN" value="{{ request.GET.q|default:'' }}" aria-label="Buscar">
                     <button class="btn btn-outline-light text-secondary border-start-0 border-top border-bottom border-end" style="border-color: #eee;" type="submit">Ir</button>
                 </div>
             </form>
