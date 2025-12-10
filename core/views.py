@@ -93,8 +93,8 @@ def editar_livro(request, id):
             return redirect('listagem_livros')
     else:
         # Quando abre a tela (GET):
-        # Preenchemos o form com os dados do livro (instance=livro)
-        # E preenchemos manualmente nosso campo extra 'nome_autor' (initial)
+        # Preenche o form com os dados do livro (instance=livro)
+        # E preenche manualmente o campo extra 'nome_autor' (initial)
         form = LivroForm(instance=livro, initial={'nome_autor': livro.autor.nome})
 
     return render(request, 'editar_livro.html', {'form': form})
