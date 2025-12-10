@@ -12,9 +12,9 @@
     <style>
         :root {
             --sidebar-width: 260px;
-            --cor-roxo-start: #8E24AA; /* Roxo mais claro do gradiente */
-            --cor-roxo-end: #4A148C;   /* Roxo mais escuro do gradiente */
-            --cor-bg-main: #F3F4F9;    /* Cinza bem clarinho de fundo */
+            --cor-roxo-start: #8E24AA;
+            --cor-roxo-end: #4A148C;
+            --cor-bg-main: #F3F4F9;
             --cor-texto: #333;
         }
 
@@ -207,7 +207,7 @@
             </li>
 
             <li class="nav-item">
-                <a href="#" class="nav-link">
+                <a href="{% url 'listar_emprestimos' %}" class="nav-link {% if request.resolver_match.url_name == 'listar_emprestimos' %}active{% endif %}">
                     <i class="bi bi-file-earmark-text"></i>
                     <span>Empréstimos</span>
                 </a>
