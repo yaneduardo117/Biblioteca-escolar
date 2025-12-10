@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from datetime import date, timedelta
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=50, unique=True)
@@ -67,3 +68,22 @@ class Usuario(AbstractUser):
 
     def __str__(self):
         return f"{self.first_name} ({self.tipo_usuario})"
+
+
+class Emprestimo(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    livro = models.ForeignKey(Livro, on_delete=models.PROTECT)
+    data_emprestimo = models.DateField(auto_now_add=True)
+    data_devolucao_prevista = models.DateField()
+    data_devolucao_real = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.usuario} - {self.livro}"
+
+    @property
+    def status(self):
+        if self.data_devolucao_real:
+            return 'Devolvido'
+        if date.today() > self.data_devolucao_prevista:
+            return 'Atrasado'
+        return 'Em andamento'
