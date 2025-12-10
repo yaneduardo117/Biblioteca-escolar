@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Gestão de Empréstimos{% endblock %}
+{% block page_subtitle %}Acompanhe todos os empréstimos de livros{% endblock %}
+
+{% block content %}
+
+<style>
+    /* Reutilizando estilos base do dashboard */
+    .card-stat {
+        background: white;
+        border: none;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        height: 100%;
+        display: flex; flex-direction: column; justify-content: center;
+    }
+    .stat-label { color: #888; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+    .stat-value { font-size: 32px; font-weight: 500; line-height: 1.2; }
+
+    /* Cores Específicas dos Cards de Status */
+    .text-blue { color: #2979FF; }
+    .text-red { color: #FF1744; }
+    .text-green { color: #00C853; }
+
+    .main-card {
+        background: white; border: none; border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02); margin-top: 20px; overflow: hidden;
+    }
+
+    /* Badges de Status */
+    .badge-status { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+
+    .status-andamento { background-color: #E3F2FD; color: #1565C0; }
+    .status-atrasado { background-color: #FFEBEE; color: #C62828; }
+    .status-devolvido { background-color: #E8F5E9; color: #2E7D32; }
+
+    /* Tabela */
+    .table-custom th { font-size: 11px; font-weight: 700; color: #9AA0AC; text-transform: uppercase; border-bottom: 1px solid #f0f0f0; padding: 15px 24px; background: white; }
+    .table-custom td { font-size: 14px; color: #444; vertical-align: middle; padding: 15px 24px; border-bottom: 1px solid #f9f9f9; }
+
+    .btn-purple { background-color: #6200EA; color: white; border-radius: 6px; padding: 8px 16px; font-weight: 500; border: none; }
+    .btn-purple:hover { background-color: #5000ca; color: white; }
+</style>
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-3 mb-md-0">
+        <div class="card-stat">
+            <div class="stat-label">Total de Empréstimos</div>
+            <div class="stat-value text-dark">{{ total_emprestimos }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3 mb-md-0">
+        <div class="card-stat">
+            <div class="stat-label">Em Andamento</div>
+            <div class="stat-value text-blue">{{ em_andamento }}</div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3 mb-md-0">
+        <div class="card-stat">
+            <div class="stat-label">Atrasados</div>
+            <div class="stat-value text-red">{{ atrasados }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-stat">
+            <div class="stat-label">Devolvidos</div>
+            <div class="stat-value text-green">{{ devolvidos }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="main-card">
+
+    <div class="p-4 d-flex flex-wrap align-items-center justify-content-between gap-3 border-bottom border-light">
+        <h5 class="mb-0 fw-bold text-secondary">Lista de Empréstimos</h5>
+
+        <div class="d-flex gap-2 flex-grow-1 justify-content-end">
+            <form method="get" class="d-flex w-100" style="max-width: 350px;">
+                <input type="text" name="q" class="form-control bg-light border-0" placeholder="Buscar por nome, matrícula ou livro" value="{{ request.GET.q|default:'' }}">
+            </form>
+
+            <button type="button" class="btn-purple d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalNovoEmprestimo">
+                <i class="bi bi-plus-lg"></i> Novo Empréstimo
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-custom w-100">
+            <thead>
+                <tr>
+                    <th>Usuário</th>
+                    <th>Matrícula</th>
+                    <th>Livro</th>
+                    <th>Data Empréstimo</th>
+                    <th>Previsão Devolução</th>
+                    <th>Status</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in emprestimos %}
+                <tr>
+                    <td class="fw-medium">{{ emp.usuario.first_name }}</td>
+                    <td class="text-secondary">{{ emp.usuario.matricula|default:'-' }}</td>
+                    <td class="fw-medium text-dark">{{ emp.livro.titulo }}</td>
+                    <td class="text-muted"><i class="bi bi-calendar3 me-1"></i> {{ emp.data_emprestimo|date:"d/m/Y" }}</td>
+                    <td class="text-muted"><i class="bi bi-calendar-event me-1"></i> {{ emp.data_devolucao_prevista|date:"d/m/Y" }}</td>
+
+                    <td>
+                        {% if emp.status == 'Em andamento' %}
+                            <span class="badge-status status-andamento"><i class="bi bi-clock"></i> Em andamento</span>
+                        {% elif emp.status == 'Atrasado' %}
+                            <span class="badge-status status-atrasado"><i class="bi bi-exclamation-circle"></i> Atrasado</span>
+                        {% else %}
+                            <span class="badge-status status-devolvido"><i class="bi bi-check-circle"></i> Devolvido</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        {% if emp.status != 'Devolvido' %}
+                        <a href="{% url 'devolver_livro' emp.id %}" class="btn btn-sm btn-outline-success border-0 fw-bold" title="Registrar Devolução">
+                            <i class="bi bi-arrow-return-left"></i> Devolver
+                        </a>
+                        {% else %}
+                        <span class="text-muted small">Concluído</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">Nenhum empréstimo registrado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNovoEmprestimo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom-0 p-4 pb-0">
+                <h5 class="fw-bold">Registrar Novo Empréstimo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="{% url 'criar_emprestimo' %}" method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Selecione o Aluno/Usuário</label>
+                        <select name="usuario" class="form-select" required>
+                            <option value="">Buscar usuário...</option>
+                            {% for u in usuarios_list %}
+                                <option value="{{ u.id }}">{{ u.first_name }} ({{ u.matricula }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-secondary">Selecione o Livro</label>
+                        <select name="livro" class="form-select" required>
+                            <option value="">Buscar livro disponível...</option>
+                            {% for l in livros_disponiveis %}
+                                <option value="{{ l.id }}">{{ l.titulo }} (Estoque: {{ l.quantidade }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-purple py-2">Confirmar Empréstimo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
