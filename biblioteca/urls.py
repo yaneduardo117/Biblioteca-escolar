@@ -28,8 +28,13 @@ urlpatterns = [
     path('registrar/', views.cadastrar_usuario, name='cadastrar_usuario'),
 
     # ---  ROTAS DO SISTEMA ---
+    # rotas do campo livros:
     path('', views.listagem_livros, name='listagem_livros'),
     path('cadastrar/', views.cadastro_livro, name='cadastro_livro'),
     path('editar/<int:id>/', views.editar_livro, name='editar_livro'),
     path('remover/<int:id>/', views.remover_livro, name='remover_livro'),
+    # rotas do campo emprestimos:
+    path('emprestimos/', views.listar_emprestimos, name='listar_emprestimos'),
+    path('emprestimos/novo/', views.criar_emprestimo, name='criar_emprestimo'),
+    path('emprestimos/devolver/<int:id>/', views.devolver_livro, name='devolver_livro'),
 ]
