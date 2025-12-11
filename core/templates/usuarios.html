@@ -6,49 +6,44 @@
 {% block content %}
 
 <style>
-    /* Reutilizando estilos dos cards */
-    .card-stat {
-        background: white; border: none; border-radius: 8px;
-        padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        height: 100%; display: flex; flex-direction: column; justify-content: center;
-    }
+    /* Estilos do Dashboard */
+    .card-stat { background: white; border: none; border-radius: 8px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); height: 100%; display: flex; flex-direction: column; justify-content: center; }
     .stat-label { color: #888; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
     .stat-value { font-size: 32px; font-weight: 500; line-height: 1.2; color: #333; }
 
-    .main-card {
-        background: white; border: none; border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.02); margin-top: 20px; overflow: hidden;
-    }
+    .main-card { background: white; border: none; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); margin-top: 20px; overflow: hidden; }
 
-    /* --- BADGES DE TIPO DE USUÁRIO --- */
-    .badge-type {
-        padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
-        display: inline-block;
-    }
-    /* Roxo para Admin */
+    /* Badges */
+    .badge-type { padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block; }
     .type-admin { background-color: #F3E5F5; color: #8E24AA; }
-    /* Azul para Bibliotecário */
     .type-biblio { background-color: #E3F2FD; color: #1565C0; }
-    /* Cinza para Aluno */
     .type-aluno { background-color: #F5F5F5; color: #616161; }
 
-    /* --- BADGES DE STATUS --- */
-    .badge-status {
-        padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
-    }
+    .badge-status { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
     .status-ativo { background-color: #E8F5E9; color: #2E7D32; }
     .status-inativo { background-color: #FFEBEE; color: #C62828; }
 
-    /* Tabela e Botões */
+    /* Tabela */
     .table-custom th { font-size: 11px; font-weight: 700; color: #9AA0AC; text-transform: uppercase; padding: 15px 24px; border-bottom: 1px solid #f0f0f0; }
     .table-custom td { font-size: 14px; color: #444; vertical-align: middle; padding: 15px 24px; border-bottom: 1px solid #f9f9f9; }
 
+    /* Botão Roxo */
     .btn-purple { background-color: #6200EA; color: white; border-radius: 6px; border: none; padding: 8px 16px; font-weight: 500; }
     .btn-purple:hover { background-color: #5000ca; color: white; }
 
-    .action-icon { color: #00bfa5; transition: 0.2s; cursor: pointer; }
-    .action-icon:hover { color: #008f7a; }
+    /* Barra de Força da Senha (No Modal) */
+    .progress-bar-custom { height: 4px; background: #eee; margin-top: 8px; border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: #dc3545; transition: 0.3s; }
 </style>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
 
 <div class="row mb-4">
     <div class="col-md-4 mb-3 mb-md-0">
@@ -72,7 +67,6 @@
 </div>
 
 <div class="main-card">
-
     <div class="p-4 d-flex flex-wrap align-items-center justify-content-between gap-3 border-bottom border-light">
         <h5 class="mb-0 fw-bold text-secondary">Gestão de Usuários</h5>
 
@@ -81,12 +75,13 @@
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
                     <input type="text" name="q" class="form-control bg-light border-start-0" placeholder="Buscar por nome ou e-mail" value="{{ request.GET.q|default:'' }}">
+                    <button type="submit" class="btn btn-outline-secondary border-start-0">Ir</button>
                 </div>
             </form>
 
-            <a href="{% url 'cadastrar_usuario' %}" class="btn btn-purple d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-purple d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalAddUser">
                 <i class="bi bi-plus-lg"></i> Adicionar Usuário
-            </a>
+            </button>
         </div>
     </div>
 
@@ -107,9 +102,6 @@
                 <tr>
                     <td>
                         <div class="fw-bold text-dark">{{ usuario.first_name }} {{ usuario.last_name }}</div>
-                        {% if usuario.matricula %}
-                            <small class="text-muted" style="font-size: 11px;">Mat: {{ usuario.matricula }}</small>
-                        {% endif %}
                     </td>
                     <td class="text-muted">{{ usuario.email }}</td>
 
@@ -136,7 +128,7 @@
                     </td>
 
                     <td class="text-end">
-                        <a href="#" class="action-icon me-2" title="Editar Usuário">
+                        <a href="{% url 'editar_usuario' usuario.id %}" class="btn btn-sm text-primary" title="Editar / Bloquear">
                             <i class="bi bi-pencil-square fs-5"></i>
                         </a>
                     </td>
@@ -152,5 +144,92 @@
         </table>
     </div>
 </div>
+
+<div class="modal fade" id="modalAddUser" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+            <div class="modal-header border-bottom-0 p-4 pb-0">
+                <h5 class="fw-bold">Novo Funcionário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="{% url 'adicionar_usuario' %}" method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nome Completo</label>
+                        {{ form_adicionar.first_name }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">E-mail</label>
+                        {{ form_adicionar.email }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Cargo</label>
+                        {{ form_adicionar.tipo_usuario }}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Senha</label>
+                        <div class="position-relative">
+                            {{ form_adicionar.senha1 }}
+                            <i class="bi bi-eye-slash position-absolute end-0 top-50 translate-middle-y me-3 text-muted cursor-pointer" id="toggleSenhaModal" style="cursor: pointer;"></i>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" id="forcaBarraModal"></div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <div class="small fw-bold mt-1" id="msgForcaModal" style="color: #dc3545; font-size: 11px;">Fraca</div>
+                            <div class="small text-muted mt-1" style="font-size: 11px;">Mín. 8 caracteres</div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-purple py-2">Salvar Usuário</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const senhaInputModal = document.getElementById('senhaInput');
+    const barraModal = document.getElementById('forcaBarraModal');
+    const msgForcaModal = document.getElementById('msgForcaModal');
+
+    if(senhaInputModal) {
+        senhaInputModal.addEventListener('keyup', function() {
+            const val = senhaInputModal.value;
+            let score = 0;
+            if(val.length >= 8) score++;
+            if(/[A-Z]/.test(val)) score++;
+            if(/[a-z]/.test(val)) score++;
+            if(/[0-9]/.test(val)) score++;
+            if(/[!@#$%^&*]/.test(val)) score++;
+
+            let width = (score / 5) * 100;
+            let color = '#dc3545';
+            let text = 'Fraca';
+
+            if(score >= 3) { color = '#ffc107'; text = 'Média'; }
+            if(score == 5) { color = '#198754'; text = 'Forte'; }
+
+            barraModal.style.width = width + '%';
+            barraModal.style.backgroundColor = color;
+            msgForcaModal.innerText = text;
+            msgForcaModal.style.color = color;
+        });
+
+        document.getElementById('toggleSenhaModal').addEventListener('click', function() {
+            const type = senhaInputModal.getAttribute('type') === 'password' ? 'text' : 'password';
+            senhaInputModal.setAttribute('type', type);
+            this.classList.toggle('bi-eye');
+            this.classList.toggle('bi-eye-slash');
+        });
+    }
+</script>
 
 {% endblock %}
