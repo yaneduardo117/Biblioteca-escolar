@@ -1,26 +1,23 @@
 from datetime import date, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum, Q
+from django.contrib import messages
 from .models import Livro, Autor, Emprestimo, Usuario
-from .forms import LivroForm, CadastroUsuarioForm, EmprestimoForm
+from .forms import LivroForm, CadastroUsuarioForm, EmprestimoForm, FormAdicionarUsuario, FormEditarUsuario
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout, login
+from django.contrib.auth import logout
 
 
 @login_required
 def listagem_livros(request):
     """
-    Essa é a tela principal (Dashboard de Livros).
-    Aqui carrego a lista e calculo os números para os cards do topo.
+    Dashboard principal: Lista livros e mostra estatísticas do acervo.
     """
-
-    # Busco os livros otimizando a consulta (trazendo autor e categoria junto)
     livros = Livro.objects.select_related('autor', 'categoria').all().order_by('-id')
 
     # --- LÓGICA DE PESQUISA ---
     # Se o usuário digitou algo na barra de busca, filtro aqui
     query = request.GET.get('q')
-
     if query:
         livros = livros.filter(
             Q(titulo__icontains=query) |
@@ -32,14 +29,8 @@ def listagem_livros(request):
     # Pego todos os livros para garantir que os cards mostrem o total real da biblioteca,
     # independente do filtro de pesquisa atual.
     todos_livros = Livro.objects.all()
-
-    # Conto quantos títulos diferentes temos
     total_livros = todos_livros.count()
-
-    # Somo a quantidade física de todos os exemplares (campo 'quantidade')
     total_exemplares = todos_livros.aggregate(Sum('quantidade'))['quantidade__sum'] or 0
-
-    # Conto quantas categorias diferentes estamos usando
     total_categorias = todos_livros.values('categoria').distinct().count()
 
     context = {
@@ -48,7 +39,6 @@ def listagem_livros(request):
         'total_exemplares': total_exemplares,
         'total_categorias': total_categorias,
     }
-
     return render(request, 'listagem_livros.html', context)
 
 
@@ -57,18 +47,14 @@ def cadastro_livro(request):
     if request.method == 'POST':
         form = LivroForm(request.POST)
         if form.is_valid():
-            # Crio o objeto na memória sem salvar ainda
             livro = form.save(commit=False)
 
-            # Aqui está o pulo do gato: pego o nome do autor que foi digitado
-            # e verifico se já existe no banco. Se não existir, crio um novo.
+            # Lógica para criar Autor se não existir
             nome_digitado = form.cleaned_data['nome_autor']
             autor_obj, created = Autor.objects.get_or_create(nome=nome_digitado)
-
-            # Associo o autor ao livro e salvo tudo
             livro.autor = autor_obj
+            # Associo o autor ao livro e salvo tudo
             livro.save()
-
             return redirect('listagem_livros')
     else:
         form = LivroForm()
@@ -86,13 +72,11 @@ def editar_livro(request, id):
         if form.is_valid():
             livro_editado = form.save(commit=False)
 
-            # Mesma lógica do autor: verifico ou crio um novo na hora da edição
             nome_digitado = form.cleaned_data['nome_autor']
             autor_obj, created = Autor.objects.get_or_create(nome=nome_digitado)
-
             livro_editado.autor = autor_obj
-            livro_editado.save()
 
+            livro_editado.save()
             return redirect('listagem_livros')
     else:
         # Quando abro a tela, preencho o form com os dados atuais
@@ -104,7 +88,6 @@ def editar_livro(request, id):
 
 @login_required
 def remover_livro(request, id):
-    # Simplesmente apago o livro e volto pra lista
     livro = get_object_or_404(Livro, id=id)
     livro.delete()
     return redirect('listagem_livros')
@@ -124,7 +107,6 @@ def cadastrar_usuario(request):
         form = CadastroUsuarioForm(request.POST)
         if form.is_valid():
             usuario = form.save(commit=False)
-            # Garanto que o username seja igual ao email para evitar confusão no login
             usuario.username = usuario.email
             usuario.save()
             return redirect('login')
@@ -150,21 +132,13 @@ def listar_emprestimos(request):
             Q(usuario__matricula__icontains=query)
         )
 
-    # --- CÁLCULOS DOS CARDS (STATUS) ---
+    # Contadores
     total_emprestimos = emprestimos.count()
-
     # Em andamento: não devolvido ainda e a data prevista é hoje ou futuro
-    em_andamento = emprestimos.filter(
-        data_devolucao_real__isnull=True,
-        data_devolucao_prevista__gte=date.today()
-    ).count()
 
-    # Atrasados: não devolvido e a data prevista já passou
-    atrasados = emprestimos.filter(
-        data_devolucao_real__isnull=True,
-        data_devolucao_prevista__lt=date.today()
-    ).count()
-
+    em_andamento = emprestimos.filter(data_devolucao_real__isnull=True,
+                                      data_devolucao_prevista__gte=date.today()).count()
+    atrasados = emprestimos.filter(data_devolucao_real__isnull=True, data_devolucao_prevista__lt=date.today()).count()
     # Devolvidos: campo data_devolucao_real está preenchido
     devolvidos = emprestimos.filter(data_devolucao_real__isnull=False).count()
 
@@ -175,7 +149,6 @@ def listar_emprestimos(request):
         'atrasados': atrasados,
         'devolvidos': devolvidos,
         'hoje': date.today(),
-        # Esses dados vão para o dropdown do Modal de Novo Empréstimo
         'usuarios_list': Usuario.objects.filter(is_active=True),
         'livros_disponiveis': Livro.objects.filter(quantidade__gt=0),
     }
@@ -189,7 +162,7 @@ def criar_emprestimo(request):
         if form.is_valid():
             emprestimo = form.save(commit=False)
 
-            # Regra 1: Defino a data de devolução para 14 dias a partir de hoje
+            # Regras: Data devolução (+14 dias) e Estoque (-1)
             emprestimo.data_devolucao_prevista = date.today() + timedelta(days=14)
 
             # Regra 2: Controle de Estoque
@@ -222,31 +195,75 @@ def devolver_livro(request, id):
     return redirect('listar_emprestimos')
 
 
+# --- LÓGICA DE USUÁRIOS (ADM) ---
+
 @login_required
 def listar_usuarios(request):
-    # Apenas superusuários ou admins deveriam ver isso, mas por enquanto vamos liberar para login_required
+    """
+    Lista todos os usuários e mostra estatísticas administrativas.
+    """
     usuarios = Usuario.objects.all().order_by('-date_joined')
 
-    # Filtro de Busca
+    # Filtro de Busca (Nome ou Email)
     query = request.GET.get('q')
     if query:
         usuarios = usuarios.filter(
             Q(first_name__icontains=query) |
-            Q(email__icontains=query) |
-            Q(matricula__icontains=query)
+            Q(email__icontains=query)
         )
 
-    # Estatísticas
+    # Estatísticas do Dashboard
     total_usuarios = Usuario.objects.count()
+
+    # Calcula 'usuarios_ativos'
     usuarios_ativos = Usuario.objects.filter(is_active=True).count()
-    # Filtra pelo tipo ADMIN (certifique-se que no model o value é 'ADMIN')
-    total_admins = Usuario.objects.filter(tipo_usuario='ADMIN').count()
+
+    # Conta Admins (inclui quem é superuser)
+    total_admins = Usuario.objects.filter(Q(tipo_usuario='ADMIN') | Q(is_superuser=True)).count()
 
     context = {
         'usuarios': usuarios,
         'total_usuarios': total_usuarios,
-        'usuarios_ativos': usuarios_ativos,
+        'usuarios_ativos': usuarios_ativos,  # Nome corrigido aqui
         'total_admins': total_admins,
+        # Enviamos o formulário vazio para ser usado no Modal de Adicionar
+        'form_adicionar': FormAdicionarUsuario()
     }
 
     return render(request, 'usuarios.html', context)
+
+
+@login_required
+def adicionar_usuario(request):
+    """
+    Processa o formulário do Modal para criar um novo usuário (Adm/Bibliotecário).
+    """
+    if request.method == 'POST':
+        form = FormAdicionarUsuario(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Usuário adicionado com sucesso!")
+            return redirect('listar_usuarios')
+        else:
+            messages.error(request, "Erro ao adicionar. Verifique os campos.")
+
+    return redirect('listar_usuarios')
+
+
+@login_required
+def editar_usuario(request, id):
+    """
+    Tela para editar dados e alterar status (Ativo/Inativo) de um usuário.
+    """
+    usuario = get_object_or_404(Usuario, id=id)
+
+    if request.method == 'POST':
+        form = FormEditarUsuario(request.POST, instance=usuario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Dados do usuário atualizados!")
+            return redirect('listar_usuarios')
+    else:
+        form = FormEditarUsuario(instance=usuario)
+
+    return render(request, 'editar_usuario.html', {'form': form, 'usuario': usuario})
