@@ -37,4 +37,6 @@ urlpatterns = [
     path('emprestimos/', views.listar_emprestimos, name='listar_emprestimos'),
     path('emprestimos/novo/', views.criar_emprestimo, name='criar_emprestimo'),
     path('emprestimos/devolver/<int:id>/', views.devolver_livro, name='devolver_livro'),
+    # rotas do campo usuários:
+    path('usuarios/', views.listar_usuarios, name='listar_usuarios'),
 ]
