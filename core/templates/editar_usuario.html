@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Editar Usuário{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card-custom">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">Dados de {{ usuario.first_name }}</h5>
+                {% if usuario.is_active %}
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success">Status Atual: Ativo</span>
+                {% else %}
+                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">Status Atual: Inativo</span>
+                {% endif %}
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-bold">Nome Completo</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-bold">E-mail</label>
+                    {{ form.email }}
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-bold">Cargo</label>
+                    {{ form.tipo_usuario }}
+                </div>
+
+                <div class="p-3 mb-4 rounded-3 border d-flex align-items-center justify-content-between bg-light">
+                    <div>
+                        <label class="fw-bold mb-1 text-dark" for="{{ form.is_active.id_for_label }}">Acesso ao Sistema</label>
+                        <div class="small" id="statusTexto" style="min-width: 200px;">
+                            </div>
+                    </div>
+
+                    <div class="form-check form-switch">
+                        {{ form.is_active }}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'listar_usuarios' %}" class="btn btn-light px-4">Cancelar</a>
+                    <button type="submit" class="btn btn-purple px-4">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script para mudar o texto e cor em tempo real ao clicar no switch
+    const switchInput = document.querySelector('.form-check-input'); // Pega o checkbox do Django
+    const statusTexto = document.getElementById('statusTexto');
+
+    function atualizarInterface() {
+        if(switchInput.checked) {
+            statusTexto.innerHTML = "<span class='text-success fw-bold'><i class='bi bi-check-circle-fill'></i> ATIVO</span> <span class='text-muted'>- Pode fazer login.</span>";
+        } else {
+            statusTexto.innerHTML = "<span class='text-danger fw-bold'><i class='bi bi-x-circle-fill'></i> INATIVO</span> <span class='text-muted'>- Login bloqueado.</span>";
+        }
+    }
+
+    if(switchInput) {
+        // Roda ao carregar a página para mostrar o estado inicial
+        atualizarInterface();
+
+        // Roda toda vez que o usuário clica no switch
+        switchInput.addEventListener('change', atualizarInterface);
+    }
+</script>
+{% endblock %}
