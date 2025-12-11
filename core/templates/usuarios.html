@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Administração de Usuários{% endblock %}
+{% block page_subtitle %}Gerencie administradores, bibliotecários e alunos{% endblock %}
+
+{% block content %}
+
+<style>
+    /* Reutilizando estilos dos cards */
+    .card-stat {
+        background: white; border: none; border-radius: 8px;
+        padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        height: 100%; display: flex; flex-direction: column; justify-content: center;
+    }
+    .stat-label { color: #888; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+    .stat-value { font-size: 32px; font-weight: 500; line-height: 1.2; color: #333; }
+
+    .main-card {
+        background: white; border: none; border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02); margin-top: 20px; overflow: hidden;
+    }
+
+    /* --- BADGES DE TIPO DE USUÁRIO --- */
+    .badge-type {
+        padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+        display: inline-block;
+    }
+    /* Roxo para Admin */
+    .type-admin { background-color: #F3E5F5; color: #8E24AA; }
+    /* Azul para Bibliotecário */
+    .type-biblio { background-color: #E3F2FD; color: #1565C0; }
+    /* Cinza para Aluno */
+    .type-aluno { background-color: #F5F5F5; color: #616161; }
+
+    /* --- BADGES DE STATUS --- */
+    .badge-status {
+        padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .status-ativo { background-color: #E8F5E9; color: #2E7D32; }
+    .status-inativo { background-color: #FFEBEE; color: #C62828; }
+
+    /* Tabela e Botões */
+    .table-custom th { font-size: 11px; font-weight: 700; color: #9AA0AC; text-transform: uppercase; padding: 15px 24px; border-bottom: 1px solid #f0f0f0; }
+    .table-custom td { font-size: 14px; color: #444; vertical-align: middle; padding: 15px 24px; border-bottom: 1px solid #f9f9f9; }
+
+    .btn-purple { background-color: #6200EA; color: white; border-radius: 6px; border: none; padding: 8px 16px; font-weight: 500; }
+    .btn-purple:hover { background-color: #5000ca; color: white; }
+
+    .action-icon { color: #00bfa5; transition: 0.2s; cursor: pointer; }
+    .action-icon:hover { color: #008f7a; }
+</style>
+
+<div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card-stat">
+            <div class="stat-label">Total de Usuários</div>
+            <div class="stat-value">{{ total_usuarios }}</div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card-stat">
+            <div class="stat-label">Usuários Ativos</div>
+            <div class="stat-value text-success">{{ usuarios_ativos }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-stat">
+            <div class="stat-label">Administradores</div>
+            <div class="stat-value text-primary">{{ total_admins }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="main-card">
+
+    <div class="p-4 d-flex flex-wrap align-items-center justify-content-between gap-3 border-bottom border-light">
+        <h5 class="mb-0 fw-bold text-secondary">Gestão de Usuários</h5>
+
+        <div class="d-flex gap-2 flex-grow-1 justify-content-end">
+            <form method="get" class="d-flex w-100" style="max-width: 350px;">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control bg-light border-start-0" placeholder="Buscar por nome ou e-mail" value="{{ request.GET.q|default:'' }}">
+                </div>
+            </form>
+
+            <a href="{% url 'cadastrar_usuario' %}" class="btn btn-purple d-flex align-items-center gap-2">
+                <i class="bi bi-plus-lg"></i> Adicionar Usuário
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-custom w-100 mb-0">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Data Cadastro</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>
+                        <div class="fw-bold text-dark">{{ usuario.first_name }} {{ usuario.last_name }}</div>
+                        {% if usuario.matricula %}
+                            <small class="text-muted" style="font-size: 11px;">Mat: {{ usuario.matricula }}</small>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted">{{ usuario.email }}</td>
+
+                    <td>
+                        {% if usuario.tipo_usuario == 'ADMIN' or usuario.is_superuser %}
+                            <span class="badge-type type-admin">Administrador</span>
+                        {% elif usuario.tipo_usuario == 'BIBLIOTECARIO' %}
+                            <span class="badge-type type-biblio">Bibliotecário</span>
+                        {% else %}
+                            <span class="badge-type type-aluno">Aluno</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if usuario.is_active %}
+                            <span class="badge-status status-ativo">Ativo</span>
+                        {% else %}
+                            <span class="badge-status status-inativo">Inativo</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-muted small">
+                        {{ usuario.date_joined|date:"d/m/Y" }}
+                    </td>
+
+                    <td class="text-end">
+                        <a href="#" class="action-icon me-2" title="Editar Usuário">
+                            <i class="bi bi-pencil-square fs-5"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        Nenhum usuário encontrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
