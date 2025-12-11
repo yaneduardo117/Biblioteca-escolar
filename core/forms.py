@@ -151,8 +151,57 @@ class EmprestimoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """
-        Ao iniciar o formulário, filtramos a lista de livros
+        Ao iniciar o formulário, filtra a lista de livros
         para exibir APENAS aqueles que têm estoque disponível (quantidade > 0).
         """
         super().__init__(*args, **kwargs)
         self.fields['livro'].queryset = Livro.objects.filter(quantidade__gt=0)
+
+
+# --- FORMULÁRIO PARA ADICIONAR FUNCIONÁRIOS (ADM/BIBLIOTECÁRIO) ---
+class FormAdicionarUsuario(forms.ModelForm):
+    senha1 = forms.CharField(
+        label='Senha',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'id': 'senhaInput'}), # ID para o JS
+        required=True
+    )
+    # Cargo fixo para Adm ou Bibliotecário
+    tipo_usuario = forms.ChoiceField(
+        choices=[('ADMIN', 'Administrador'), ('BIBLIOTECARIO', 'Bibliotecário')],
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label='Cargo'
+    )
+
+    class Meta:
+        model = Usuario
+        fields = ['first_name', 'email', 'tipo_usuario']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome Completo'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'email@exemplo.com'}),
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if Usuario.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este e-mail já está cadastrado.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["senha1"])
+        user.username = user.email
+        if commit:
+            user.save()
+        return user
+
+# --- FORMULÁRIO PARA EDITAR USUÁRIO (STATUS) ---
+class FormEditarUsuario(forms.ModelForm):
+    class Meta:
+        model = Usuario
+        fields = ['first_name', 'email', 'tipo_usuario', 'is_active'] # is_active controla o bloqueio
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'tipo_usuario': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'width: 20px; height: 20px;'}),
+        }
