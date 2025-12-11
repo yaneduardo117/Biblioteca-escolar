@@ -220,3 +220,33 @@ def devolver_livro(request, id):
         livro.save()
 
     return redirect('listar_emprestimos')
+
+
+@login_required
+def listar_usuarios(request):
+    # Apenas superusuários ou admins deveriam ver isso, mas por enquanto vamos liberar para login_required
+    usuarios = Usuario.objects.all().order_by('-date_joined')
+
+    # Filtro de Busca
+    query = request.GET.get('q')
+    if query:
+        usuarios = usuarios.filter(
+            Q(first_name__icontains=query) |
+            Q(email__icontains=query) |
+            Q(matricula__icontains=query)
+        )
+
+    # Estatísticas
+    total_usuarios = Usuario.objects.count()
+    usuarios_ativos = Usuario.objects.filter(is_active=True).count()
+    # Filtra pelo tipo ADMIN (certifique-se que no model o value é 'ADMIN')
+    total_admins = Usuario.objects.filter(tipo_usuario='ADMIN').count()
+
+    context = {
+        'usuarios': usuarios,
+        'total_usuarios': total_usuarios,
+        'usuarios_ativos': usuarios_ativos,
+        'total_admins': total_admins,
+    }
+
+    return render(request, 'usuarios.html', context)
