@@ -41,4 +41,8 @@ urlpatterns = [
     path('usuarios/', views.listar_usuarios, name='listar_usuarios'),
     path('usuarios/adicionar/', views.adicionar_usuario, name='adicionar_usuario'),
     path('usuarios/editar/<int:id>/', views.editar_usuario, name='editar_usuario'),
+    # rotas de reservas:
+    path('reservar/<int:id>/', views.reservar_livro, name='reservar_livro'),
+    path('reservas/', views.gerenciar_reservas, name='gerenciar_reservas'),
+    path('reservas/validar/<int:id>/', views.validar_reserva, name='validar_reserva'),
 ]
