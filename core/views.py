@@ -1,12 +1,15 @@
 from datetime import date, timedelta
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum, Q
 from django.contrib import messages
-from .models import Livro, Autor, Emprestimo, Usuario
+from .models import Livro, Autor, Emprestimo, Usuario, Reserva
 from .forms import LivroForm, CadastroUsuarioForm, EmprestimoForm, FormAdicionarUsuario, FormEditarUsuario
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 
+
+# --- DASHBOARD E LIVROS ---
 
 @login_required
 def listagem_livros(request):
@@ -15,8 +18,7 @@ def listagem_livros(request):
     """
     livros = Livro.objects.select_related('autor', 'categoria').all().order_by('-id')
 
-    # --- LÓGICA DE PESQUISA ---
-    # Se o usuário digitou algo na barra de busca, filtro aqui
+    # Filtro de Pesquisa
     query = request.GET.get('q')
     if query:
         livros = livros.filter(
@@ -25,9 +27,7 @@ def listagem_livros(request):
             Q(isbn__icontains=query)
         )
 
-    # --- ESTATÍSTICAS DO DASHBOARD ---
-    # Pego todos os livros para garantir que os cards mostrem o total real da biblioteca,
-    # independente do filtro de pesquisa atual.
+    # Estatísticas
     todos_livros = Livro.objects.all()
     total_livros = todos_livros.count()
     total_exemplares = todos_livros.aggregate(Sum('quantidade'))['quantidade__sum'] or 0
@@ -44,16 +44,19 @@ def listagem_livros(request):
 
 @login_required
 def cadastro_livro(request):
+    # Bloqueio: Aluno não cadastra livro
+    if request.user.tipo_usuario == 'ALUNO':
+        return redirect('listagem_livros')
+
     if request.method == 'POST':
         form = LivroForm(request.POST)
         if form.is_valid():
             livro = form.save(commit=False)
 
-            # Lógica para criar Autor se não existir
             nome_digitado = form.cleaned_data['nome_autor']
             autor_obj, created = Autor.objects.get_or_create(nome=nome_digitado)
             livro.autor = autor_obj
-            # Associo o autor ao livro e salvo tudo
+
             livro.save()
             return redirect('listagem_livros')
     else:
@@ -64,7 +67,10 @@ def cadastro_livro(request):
 
 @login_required
 def editar_livro(request, id):
-    # Tento buscar o livro, se não achar dou erro 404
+    # Bloqueio: Aluno não edita livro
+    if request.user.tipo_usuario == 'ALUNO':
+        return redirect('listagem_livros')
+
     livro = get_object_or_404(Livro, id=id)
 
     if request.method == 'POST':
@@ -79,8 +85,6 @@ def editar_livro(request, id):
             livro_editado.save()
             return redirect('listagem_livros')
     else:
-        # Quando abro a tela, preencho o form com os dados atuais
-        # e coloco o nome do autor manualmente no campo de texto
         form = LivroForm(instance=livro, initial={'nome_autor': livro.autor.nome})
 
     return render(request, 'editar_livro.html', {'form': form})
@@ -88,6 +92,10 @@ def editar_livro(request, id):
 
 @login_required
 def remover_livro(request, id):
+    # Bloqueio: Aluno não remove livro
+    if request.user.tipo_usuario == 'ALUNO':
+        return redirect('listagem_livros')
+
     livro = get_object_or_404(Livro, id=id)
     livro.delete()
     return redirect('listagem_livros')
@@ -99,7 +107,7 @@ def fazer_logout(request):
 
 
 def cadastrar_usuario(request):
-    # Se o cara já tá logado, não deixo ele ver a tela de cadastro
+    """Tela de auto-cadastro (pública)"""
     if request.user.is_authenticated:
         return redirect('listagem_livros')
 
@@ -120,10 +128,15 @@ def cadastrar_usuario(request):
 
 @login_required
 def listar_emprestimos(request):
-    # Busco os empréstimos trazendo os dados do livro e do usuário para não pesar o banco
-    emprestimos = Emprestimo.objects.select_related('livro', 'usuario').all().order_by('-id')
+    # 1. FILTRAGEM POR TIPO DE USUÁRIO
+    if request.user.tipo_usuario == 'ALUNO':
+        # Aluno: Vê apenas os SEUS empréstimos
+        emprestimos = Emprestimo.objects.select_related('livro', 'usuario').filter(usuario=request.user).order_by('-id')
+    else:
+        # Staff: Vê TODOS os empréstimos
+        emprestimos = Emprestimo.objects.select_related('livro', 'usuario').all().order_by('-id')
 
-    # Filtro da barra de busca (procura por nome do aluno, título do livro ou matrícula)
+    # Filtro de Busca
     query = request.GET.get('q')
     if query:
         emprestimos = emprestimos.filter(
@@ -132,14 +145,11 @@ def listar_emprestimos(request):
             Q(usuario__matricula__icontains=query)
         )
 
-    # Contadores
+    # Cálculos dos Cards (Baseados na lista filtrada)
     total_emprestimos = emprestimos.count()
-    # Em andamento: não devolvido ainda e a data prevista é hoje ou futuro
-
     em_andamento = emprestimos.filter(data_devolucao_real__isnull=True,
                                       data_devolucao_prevista__gte=date.today()).count()
     atrasados = emprestimos.filter(data_devolucao_real__isnull=True, data_devolucao_prevista__lt=date.today()).count()
-    # Devolvidos: campo data_devolucao_real está preenchido
     devolvidos = emprestimos.filter(data_devolucao_real__isnull=False).count()
 
     context = {
@@ -157,6 +167,10 @@ def listar_emprestimos(request):
 
 @login_required
 def criar_emprestimo(request):
+    # Bloqueio: Aluno não cria empréstimo manualmente
+    if request.user.tipo_usuario == 'ALUNO':
+        return redirect('listar_emprestimos')
+
     if request.method == 'POST':
         form = EmprestimoForm(request.POST)
         if form.is_valid():
@@ -165,8 +179,6 @@ def criar_emprestimo(request):
             # Regras: Data devolução (+14 dias) e Estoque (-1)
             emprestimo.data_devolucao_prevista = date.today() + timedelta(days=14)
 
-            # Regra 2: Controle de Estoque
-            # Se tiver livro disponível, tiro um do estoque e salvo o empréstimo
             livro = emprestimo.livro
             if livro.quantidade > 0:
                 livro.quantidade -= 1
@@ -180,14 +192,17 @@ def criar_emprestimo(request):
 
 @login_required
 def devolver_livro(request, id):
+    # Bloqueio: Aluno não devolve livro no sistema
+    if request.user.tipo_usuario == 'ALUNO':
+        return redirect('listar_emprestimos')
+
     emprestimo = get_object_or_404(Emprestimo, id=id)
 
-    # Só faço a devolução se ainda não tiver sido devolvido
     if not emprestimo.data_devolucao_real:
         emprestimo.data_devolucao_real = date.today()
         emprestimo.save()
 
-        # Devolvo o livro para o estoque (aumento a quantidade)
+        # Devolve ao estoque
         livro = emprestimo.livro
         livro.quantidade += 1
         livro.save()
@@ -195,16 +210,17 @@ def devolver_livro(request, id):
     return redirect('listar_emprestimos')
 
 
-# --- LÓGICA DE USUÁRIOS (ADM) ---
+# --- LÓGICA DE USUÁRIOS (APENAS ADMIN) ---
 
 @login_required
 def listar_usuarios(request):
-    """
-    Lista todos os usuários e mostra estatísticas administrativas.
-    """
+    # 1. BLOQUEIO DE SEGURANÇA: Apenas ADMIN ou Superuser
+    if request.user.tipo_usuario != 'ADMIN' and not request.user.is_superuser:
+        messages.error(request, "Acesso negado. Área restrita a administradores.")
+        return redirect('listagem_livros')
+
     usuarios = Usuario.objects.all().order_by('-date_joined')
 
-    # Filtro de Busca (Nome ou Email)
     query = request.GET.get('q')
     if query:
         usuarios = usuarios.filter(
@@ -212,21 +228,16 @@ def listar_usuarios(request):
             Q(email__icontains=query)
         )
 
-    # Estatísticas do Dashboard
+    # Estatísticas
     total_usuarios = Usuario.objects.count()
-
-    # Calcula 'usuarios_ativos'
     usuarios_ativos = Usuario.objects.filter(is_active=True).count()
-
-    # Conta Admins (inclui quem é superuser)
     total_admins = Usuario.objects.filter(Q(tipo_usuario='ADMIN') | Q(is_superuser=True)).count()
 
     context = {
         'usuarios': usuarios,
         'total_usuarios': total_usuarios,
-        'usuarios_ativos': usuarios_ativos,  # Nome corrigido aqui
+        'usuarios_ativos': usuarios_ativos,
         'total_admins': total_admins,
-        # Enviamos o formulário vazio para ser usado no Modal de Adicionar
         'form_adicionar': FormAdicionarUsuario()
     }
 
@@ -235,9 +246,10 @@ def listar_usuarios(request):
 
 @login_required
 def adicionar_usuario(request):
-    """
-    Processa o formulário do Modal para criar um novo usuário (Adm/Bibliotecário).
-    """
+    # Bloqueio: Apenas Admin
+    if request.user.tipo_usuario != 'ADMIN' and not request.user.is_superuser:
+        return redirect('listagem_livros')
+
     if request.method == 'POST':
         form = FormAdicionarUsuario(request.POST)
         if form.is_valid():
@@ -252,9 +264,10 @@ def adicionar_usuario(request):
 
 @login_required
 def editar_usuario(request, id):
-    """
-    Tela para editar dados e alterar status (Ativo/Inativo) de um usuário.
-    """
+    # Bloqueio: Apenas Admin
+    if request.user.tipo_usuario != 'ADMIN' and not request.user.is_superuser:
+        return redirect('listagem_livros')
+
     usuario = get_object_or_404(Usuario, id=id)
 
     if request.method == 'POST':
@@ -267,3 +280,76 @@ def editar_usuario(request, id):
         form = FormEditarUsuario(instance=usuario)
 
     return render(request, 'editar_usuario.html', {'form': form, 'usuario': usuario})
+
+
+# --- LÓGICA DE RESERVAS ---
+
+@login_required
+def reservar_livro(request, id):
+    livro = get_object_or_404(Livro, id=id)
+    usuario = request.user
+
+    if Reserva.objects.filter(usuario=usuario, livro=livro, status='AGUARDANDO').exists():
+        messages.error(request, "Você já reservou este livro.")
+        return redirect('listagem_livros')
+
+    if livro.quantidade > 0:
+        livro.quantidade -= 1
+        livro.save()
+
+        Reserva.objects.create(usuario=usuario, livro=livro)
+        messages.success(request, "Livro reservado! Você tem 24h para retirar na biblioteca.")
+    else:
+        messages.error(request, "Livro indisponível no momento.")
+
+    return redirect('listagem_livros')
+
+
+@login_required
+def gerenciar_reservas(request):
+    # Bloqueio: Aluno não gerencia reservas
+    if request.user.tipo_usuario == 'ALUNO':
+        return redirect('listagem_livros')
+
+    agora = timezone.now()
+    reservas_vencidas = Reserva.objects.filter(status='AGUARDANDO', data_expiracao__lt=agora)
+
+    count_vencidas = 0
+    for reserva in reservas_vencidas:
+        livro = reserva.livro
+        livro.quantidade += 1
+        livro.save()
+
+        reserva.status = 'CANCELADA'
+        reserva.save()
+        count_vencidas += 1
+
+    if count_vencidas > 0:
+        messages.info(request, f"{count_vencidas} reservas expiradas foram canceladas.")
+
+    reservas = Reserva.objects.filter(status='AGUARDANDO').order_by('data_expiracao')
+
+    return render(request, 'gerenciar_reservas.html', {'reservas': reservas})
+
+
+@login_required
+def validar_reserva(request, id):
+    # Bloqueio: Aluno não valida reserva
+    if request.user.tipo_usuario == 'ALUNO':
+        return redirect('listagem_livros')
+
+    reserva = get_object_or_404(Reserva, id=id)
+
+    if reserva.status == 'AGUARDANDO':
+        Emprestimo.objects.create(
+            usuario=reserva.usuario,
+            livro=reserva.livro,
+            data_devolucao_prevista=date.today() + timedelta(days=14)
+        )
+
+        reserva.status = 'CONCLUIDA'
+        reserva.save()
+
+        messages.success(request, "Empréstimo confirmado com sucesso!")
+
+    return redirect('gerenciar_reservas')
