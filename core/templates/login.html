@@ -103,7 +103,11 @@
 
             {% if form.errors %}
                 <div class="alert alert-danger py-2 small rounded-3 border-0 bg-danger bg-opacity-10 text-danger mb-3">
-                    <i class="bi bi-exclamation-circle me-1"></i> Usuário ou senha incorretos.
+                    {% for error in form.non_field_errors %}
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="bi bi-exclamation-circle me-2"></i> {{ error }}
+                        </div>
+                    {% endfor %}
                 </div>
             {% endif %}
 
