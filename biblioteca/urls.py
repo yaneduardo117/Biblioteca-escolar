@@ -18,12 +18,13 @@ from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from core import views
+from core.forms import LoginForm
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     # --- ROTAS DE AUTENTICAÇÃO ---
-    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    path('login/', auth_views.LoginView.as_view(template_name='login.html', authentication_form=LoginForm), name='login'),
     path('logout/', views.fazer_logout, name='logout'),
     path('registrar/', views.cadastrar_usuario, name='cadastrar_usuario'),
 
