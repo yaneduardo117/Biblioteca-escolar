@@ -110,6 +110,15 @@
     .text-delete { color: #ff5252; }
 </style>
 
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
 <div class="row mb-4">
     <div class="col-md-4 mb-3 mb-md-0">
         <div class="card-stat">
@@ -140,14 +149,16 @@
             <form method="get" class="d-flex w-100" style="max-width: 350px;">
                 <div class="input-group search-input-group">
                     <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" name="q" class="form-control" placeholder="Buscar por título, autor ou ISBN" value="{{ request.GET.q|default:'' }}" aria-label="Buscar">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por título, autor ou ISBN" value="{{ request.GET.q|default:'' }}">
                     <button class="btn btn-outline-light text-secondary border-start-0 border-top border-bottom border-end" style="border-color: #eee;" type="submit">Ir</button>
                 </div>
             </form>
 
+            {% if user.tipo_usuario != 'ALUNO' %}
             <a href="{% url 'cadastro_livro' %}" class="btn-purple d-flex align-items-center gap-2 text-decoration-none">
                 <i class="bi bi-plus-lg"></i> <span class="d-none d-md-inline">Adicionar Livro</span>
             </a>
+            {% endif %}
         </div>
     </div>
 
@@ -183,56 +194,67 @@
                             <span class="badge bg-danger">0</span>
                         {% endif %}
                     </td>
-                    <td class="text-end">
-                        <a href="{% url 'editar_livro' livro.id %}" class="action-btn text-edit me-1" title="Editar">
-                            <i class="bi bi-pencil-square fs-5"></i>
-                        </a>
-                        <button type="button" class="action-btn text-delete" data-bs-toggle="modal" data-bs-target="#modal{{ livro.id }}" title="Excluir">
-                            <i class="bi bi-trash fs-5"></i>
-                        </button>
 
-                        <div class="modal fade" id="modal{{ livro.id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
-                                    <div class="modal-body text-center p-5">
-                                        <div class="mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10" style="width: 60px; height: 60px;">
-                                            <i class="bi bi-trash3-fill text-danger fs-3"></i>
-                                        </div>
-                                        <h5 class="fw-bold mb-2">Excluir Livro?</h5>
-                                        <p class="text-muted mb-4 text-start text-center">Tem certeza que deseja remover <strong>"{{ livro.titulo }}"</strong>?</p>
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
-                                            <a href="{% url 'remover_livro' livro.id %}" class="btn btn-danger px-4">Sim, excluir</a>
+                    <td class="text-end">
+                        {% if user.tipo_usuario == 'ALUNO' %}
+                            {% if livro.quantidade > 0 %}
+                                <a href="{% url 'reservar_livro' livro.id %}" class="btn btn-sm btn-purple fw-bold px-3"
+                                   onclick="return confirm('Deseja reservar o livro {{ livro.titulo }}? Você terá 24h para retirar na biblioteca.')">
+                                   Reservar
+                                </a>
+                            {% else %}
+                                <button class="btn btn-sm btn-light text-muted border px-3" disabled style="opacity: 0.6; font-size: 12px;">
+                                    Indisponível
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'editar_livro' livro.id %}" class="action-btn text-edit me-1" title="Editar">
+                                <i class="bi bi-pencil-square fs-5"></i>
+                            </a>
+                            <button type="button" class="action-btn text-delete" data-bs-toggle="modal" data-bs-target="#modal{{ livro.id }}" title="Excluir">
+                                <i class="bi bi-trash fs-5"></i>
+                            </button>
+
+                            <div class="modal fade" id="modal{{ livro.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                                        <div class="modal-body text-center p-5">
+                                            <div class="mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10" style="width: 60px; height: 60px;">
+                                                <i class="bi bi-trash3-fill text-danger fs-3"></i>
+                                            </div>
+                                            <h5 class="fw-bold mb-2">Excluir Livro?</h5>
+                                            <p class="text-muted mb-4 text-center">Tem certeza que deseja remover <strong>"{{ livro.titulo }}"</strong>?</p>
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+                                                <a href="{% url 'remover_livro' livro.id %}" class="btn btn-danger px-4">Sim, excluir</a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        </td>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
                     <td colspan="7" class="text-center py-5">
-
                         {% if request.GET.q %}
                             <div class="text-muted">
                                 <i class="bi bi-search" style="font-size: 2rem; color: #dee2e6;"></i>
                                 <h6 class="mt-3 fw-bold text-secondary">Nenhum resultado encontrado</h6>
                                 <p class="mb-3 small">
-                                    Não encontramos livros, autores ou ISBN contendo "<strong>{{ request.GET.q }}</strong>".
+                                    Não encontramos livros contendo "<strong>{{ request.GET.q }}</strong>".
                                 </p>
                                 <a href="{% url 'listagem_livros' %}" class="btn btn-sm btn-outline-secondary" style="border-radius: 6px;">
                                     <i class="bi bi-x-lg me-1"></i> Limpar Pesquisa
                                 </a>
                             </div>
-
                         {% else %}
                             <div class="text-muted opacity-50">
                                 <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                 <p class="mb-0">Nenhum livro cadastrado.</p>
                             </div>
                         {% endif %}
-
                     </td>
                 </tr>
                 {% endfor %}
