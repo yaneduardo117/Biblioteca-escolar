@@ -198,8 +198,8 @@
                     <td class="text-end">
                         {% if user.tipo_usuario == 'ALUNO' %}
                             {% if livro.quantidade > 0 %}
-                                <a href="{% url 'reservar_livro' livro.id %}" class="btn btn-sm btn-purple fw-bold px-3"
-                                   onclick="return confirm('Deseja reservar o livro {{ livro.titulo }}? Você terá 24h para retirar na biblioteca.')">
+                                <a href="#" class="btn btn-sm btn-purple fw-bold px-3"
+                                   onclick="confirmarReserva(event, '{% url 'reservar_livro' livro.id %}', '{{ livro.titulo|escapejs }}')">
                                    Reservar
                                 </a>
                             {% else %}
@@ -262,5 +262,34 @@
         </table>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function confirmarReserva(event, url, titulo) {
+        event.preventDefault(); // Impede o clique imediato
+
+        Swal.fire({
+            title: 'Reservar Livro?',
+            html: `Deseja reservar <b>"${titulo}"</b>?<br><span style="font-size:13px; color:#666">Você terá 24h para retirá-lo na biblioteca.</span>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#6200EA', // Roxo do sistema
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sim, reservar!',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true, // Inverte posição para melhor UX
+            focusConfirm: false,
+            customClass: {
+                popup: 'shadow-lg rounded-4'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Redireciona se confirmou
+                window.location.href = url;
+            }
+        });
+    }
+</script>
 
 {% endblock %}
