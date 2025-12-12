@@ -205,3 +205,11 @@ class FormEditarUsuario(forms.ModelForm):
             'tipo_usuario': forms.Select(attrs={'class': 'form-select'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input', 'style': 'width: 20px; height: 20px;'}),
         }
+
+from django.contrib.auth.forms import AuthenticationForm
+
+class LoginForm(AuthenticationForm):
+    error_messages = {
+        'invalid_login': "Usuário ou senha incorretos.",
+        'inactive': "Usuário bloqueado.",
+    }
