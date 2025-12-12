@@ -81,9 +81,11 @@
                 <input type="text" name="q" class="form-control bg-light border-0" placeholder="Buscar por nome, matrícula ou livro" value="{{ request.GET.q|default:'' }}">
             </form>
 
+            {% if user.tipo_usuario != 'ALUNO' %}
             <button type="button" class="btn-purple d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalNovoEmprestimo">
                 <i class="bi bi-plus-lg"></i> Novo Empréstimo
             </button>
+            {% endif %}
         </div>
     </div>
 
@@ -97,7 +99,10 @@
                     <th>Data Empréstimo</th>
                     <th>Previsão Devolução</th>
                     <th>Status</th>
-                    <th class="text-end">Ações</th>
+
+                    {% if user.tipo_usuario != 'ALUNO' %}
+                        <th class="text-end">Ações</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -119,6 +124,7 @@
                         {% endif %}
                     </td>
 
+                    {% if user.tipo_usuario != 'ALUNO' %}
                     <td class="text-end">
                         {% if emp.status != 'Devolvido' %}
                         <a href="{% url 'devolver_livro' emp.id %}" class="btn btn-sm btn-outline-success border-0 fw-bold" title="Registrar Devolução">
@@ -128,6 +134,7 @@
                         <span class="text-muted small">Concluído</span>
                         {% endif %}
                     </td>
+                    {% endif %}
                 </tr>
                 {% empty %}
                 <tr>
