@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from datetime import date, timedelta
+from django.utils import timezone
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=50, unique=True)
@@ -87,3 +88,26 @@ class Emprestimo(models.Model):
         if date.today() > self.data_devolucao_prevista:
             return 'Atrasado'
         return 'Em andamento'
+
+
+class Reserva(models.Model):
+    STATUS_CHOICES = [
+        ('AGUARDANDO', 'Aguardando Retirada'),
+        ('CONCLUIDA', 'Concluída (Empréstimo Criado)'),
+        ('CANCELADA', 'Cancelada / Expirada'),
+    ]
+
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    livro = models.ForeignKey(Livro, on_delete=models.PROTECT)
+    data_reserva = models.DateTimeField(auto_now_add=True)
+    data_expiracao = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='AGUARDANDO')
+
+    def save(self, *args, **kwargs):
+        # Se não tiver data de expiração, define como Agora + 24 horas
+        if not self.data_expiracao:
+            self.data_expiracao = timezone.now() + timedelta(hours=24)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Reserva: {self.livro} - {self.usuario}"
