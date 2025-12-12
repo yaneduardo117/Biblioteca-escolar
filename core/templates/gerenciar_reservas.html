@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Solicitações de Reserva{% endblock %}
+{% block page_subtitle %}Confirme a retirada dos livros pelos alunos{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="main-card">
+    <div class="p-4 border-bottom">
+        <h5 class="mb-0 fw-bold text-secondary">Reservas Pendentes (Aguardando Retirada)</h5>
+        <small class="text-muted">Reservas não retiradas em 24h são canceladas automaticamente ao atualizar esta página.</small>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-custom w-100 mb-0">
+            <thead>
+                <tr>
+                    <th>Aluno</th>
+                    <th>Livro</th>
+                    <th>Solicitado em</th>
+                    <th>Expira em</th>
+                    <th class="text-end">Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reserva in reservas %}
+                <tr>
+                    <td>
+                        <div class="fw-bold">{{ reserva.usuario.first_name }}</div>
+                        <small class="text-muted">{{ reserva.usuario.email }}</small>
+                    </td>
+                    <td class="text-purple fw-bold">{{ reserva.livro.titulo }}</td>
+                    <td>{{ reserva.data_reserva|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <span class="badge bg-warning text-dark">
+                            {{ reserva.data_expiracao|date:"d/m/Y H:i" }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'validar_reserva' reserva.id %}" class="btn btn-sm btn-success text-white fw-bold">
+                            <i class="bi bi-check-lg"></i> Confirmar Retirada
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="bi bi-check2-circle fs-1 d-block mb-2"></i>
+                        Nenhuma reserva pendente no momento.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
