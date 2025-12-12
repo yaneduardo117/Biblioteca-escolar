@@ -202,7 +202,7 @@
             <li class="nav-item">
                 <a href="{% url 'listagem_livros' %}" class="nav-link {% if request.resolver_match.url_name == 'listagem_livros' %}active{% endif %}">
                     <i class="bi bi-journal-album"></i>
-                    <span>Livros</span>
+                    <span>Acervo de Livros</span>
                 </a>
             </li>
 
@@ -213,12 +213,23 @@
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a href="{% url 'listar_usuarios' %}" class="nav-link {% if request.resolver_match.url_name == 'listar_usuarios' %}active{% endif %}">
-                    <i class="bi bi-people"></i>
-                    <span>Usuários</span>
-                </a>
-            </li>
+            {% if user.tipo_usuario != 'ALUNO' %}
+                <li class="nav-item">
+                    <a href="{% url 'gerenciar_reservas' %}" class="nav-link {% if request.resolver_match.url_name == 'gerenciar_reservas' %}active{% endif %}">
+                        <i class="bi bi-bell"></i>
+                        <span>Solicitações</span>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% if user.tipo_usuario == 'ADMIN' or user.is_superuser %}
+                <li class="nav-item">
+                    <a href="{% url 'listar_usuarios' %}" class="nav-link {% if request.resolver_match.url_name == 'listar_usuarios' %}active{% endif %}">
+                        <i class="bi bi-people"></i>
+                        <span>Usuários</span>
+                    </a>
+                </li>
+            {% endif %}
         </ul>
 
         <div style="padding: 20px;">
@@ -239,11 +250,11 @@
 
             <div class="user-profile">
                 <div class="text-end d-none d-md-block">
-                    <div style="font-weight: 600; font-size: 14px; color: #333;">{{ user.first_name|default:'Administrador' }}</div>
-                    <div style="font-size: 11px; color: #888;">{{ user.tipo_usuario|default:'Admin' }}</div>
+                    <div style="font-weight: 600; font-size: 14px; color: #333;">{{ user.first_name|default:'Usuário' }}</div>
+                    <div style="font-size: 11px; color: #888;">{{ user.get_tipo_usuario_display|default:'Membro' }}</div>
                 </div>
                 <div class="avatar-circle">
-                    {{ user.first_name|slice:":2"|upper|default:'AD' }}
+                    {{ user.first_name|slice:":2"|upper|default:'US' }}
                 </div>
             </div>
         </nav>
